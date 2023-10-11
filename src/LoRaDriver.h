@@ -82,8 +82,8 @@ void LoRa_init()
   
 
   LoRa.writeRegister(SX127X_REG_PAYLOAD_LENGTH, 8);
-  //LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON);
-  //LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3, SX1278_AGC_AUTO_ON | SX1278_LOW_DATA_RATE_OPT_OFF);
+  LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON);
+  LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3, SX1278_AGC_AUTO_ON | SX1278_LOW_DATA_RATE_OPT_OFF);
 
   LoRa.setOCP(240);
   LoRa.setTxPower(20,PA_OUTPUT_PA_BOOST_PIN);
@@ -102,7 +102,7 @@ void LoRa_init()
   LoRa.writeRegister(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_7_12 );
   LoRa.writeRegister(REG_PA_CONFIG, 0b11111111); // That's for the transceiver
   LoRa.writeRegister(REG_PA_DAC, 0x87); // That's for the transceiver
-  LoRa.writeRegister(REG_LNA, 00); // TURN OFF LNA FOR TRANSMIT
+  //LoRa.writeRegister(REG_LNA, 00); // TURN OFF LNA FOR TRANSMIT
   LoRa.idle();
 }
 
