@@ -64,7 +64,7 @@ void LoRa_init()
   LoRa.setPins(RADIO_CS_PIN, RADIO_RST_PIN, RADIO_DIO0_PIN);// set CS, reset, IRQ pin
 
 
-  if (!LoRa.begin(919E6)) {             // initialize ratio at 915 MHz
+  if (!LoRa.begin(910E6)) {             // initialize ratio at 915 MHz
     //Serial.println("LoRa init failed. Check your connections.");
     while (true);                       // if failed, do nothing
   }
@@ -79,10 +79,9 @@ void LoRa_init()
   LoRa.idle();
 
   LoRa.writeRegister(SX127X_REG_PAYLOAD_LENGTH, 8);
-  //setRegValue(SX127X_REG_DIO_MAPPING_1, 0b11000000, 7, 6); //undocumented "hack", looking at Table 18 from datasheet SX127X_REG_DIO_MAPPING_1 = 11 appears to be unsupported by in fact it generates an interrupt on both RXdone and TXdone, this saves switching modes.
-  LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON);
-  LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3, SX1278_AGC_AUTO_ON | SX1278_LOW_DATA_RATE_OPT_OFF);
-  //setRegValue(SX127X_REG_OCP, SX127X_OCP_ON | SX127X_OCP_150MA, 5, 0); //150ma max current
+  //LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON);
+  //LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3, SX1278_AGC_AUTO_ON | SX1278_LOW_DATA_RATE_OPT_OFF);
+
   LoRa.setOCP(240);
   LoRa.setTxPower(20,PA_OUTPUT_PA_BOOST_PIN);
   //LoRa.setPreambleLength(2);
@@ -91,7 +90,10 @@ void LoRa_init()
   //LoRa.setTxPower(20);
   //LoRa.setFrequency(868E6);
   LoRa.setSignalBandwidth(125E3);
-  LoRa.setCodingRate4(7);
+
+
+
+  LoRa.setCodingRate4(6);
   LoRa.setSpreadingFactor(12);
 }
 

@@ -442,7 +442,7 @@ void setup()
   TopMenu.begin(displayMenu, displayValue);
 
   if(!pult)
-  while(count <= 1)
+  while(count < 1)
   {
     speed = 2400;
     //if(count==0) speed = 1200;
