@@ -64,7 +64,7 @@ void LoRa_init()
   LoRa.setPins(RADIO_CS_PIN, RADIO_RST_PIN, RADIO_DIO0_PIN);// set CS, reset, IRQ pin
 
 
-  if (!LoRa.begin(915E6)) {             // initialize ratio at 915 MHz
+  if (!LoRa.begin(919E6)) {             // initialize ratio at 915 MHz
     //Serial.println("LoRa init failed. Check your connections.");
     while (true);                       // if failed, do nothing
   }
