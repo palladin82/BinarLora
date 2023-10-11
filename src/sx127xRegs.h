@@ -140,6 +140,7 @@ typedef enum
 // SX127X_REG_DETECT_OPTIMIZE
 #define SX127X_DETECT_OPTIMIZE_SF_6 0b00000101    //  2     0     SF6 detection optimization
 #define SX127X_DETECT_OPTIMIZE_SF_7_12 0b00000011 //  2     0     SF7 to SF12 detection optimization
+#define SX127X_DETECT_OPTIMIZE_SF_MASK 0b00000111 //  2     0
 
 // SX127X_REG_DETECTION_THRESHOLD
 #define SX127X_DETECTION_THRESHOLD_SF_6 0b00001100    //  7     0     SF6 detection threshold

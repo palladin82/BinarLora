@@ -10,6 +10,9 @@
 #define RADIO_RST_PIN               14
 #define RADIO_DIO1_PIN              33
 #define RADIO_BUSY_PIN              32
+#define REG_PA_CONFIG            0x09
+#define REG_PA_DAC               0x4d
+#define REG_LNA                  0x0c
 
 const int csPin = 7;          // LoRa radio chip select
 const int resetPin = 6;       // LoRa radio reset
@@ -64,19 +67,19 @@ void LoRa_init()
   LoRa.setPins(RADIO_CS_PIN, RADIO_RST_PIN, RADIO_DIO0_PIN);// set CS, reset, IRQ pin
 
 
-  if (!LoRa.begin(910E6)) {             // initialize ratio at 915 MHz
+  if (!LoRa.begin(914E6)) {             // initialize ratio at 915 MHz
     //Serial.println("LoRa init failed. Check your connections.");
     while (true);                       // if failed, do nothing
   }
 
 
-  LoRa.setPreambleLength(16);
+  LoRa.setPreambleLength(8);
   
 
   LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_SLEEP);
   LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_LORA); //must be written in sleep mode
   //LoRa.SetMode(SX127x_OPMODE_STANDBY);
-  LoRa.idle();
+  
 
   LoRa.writeRegister(SX127X_REG_PAYLOAD_LENGTH, 8);
   //LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON);
@@ -93,8 +96,14 @@ void LoRa_init()
 
 
 
-  LoRa.setCodingRate4(6);
+  LoRa.setCodingRate4(7);
   LoRa.setSpreadingFactor(12);
+  LoRa.writeRegisterBits(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_7_12, SX127X_DETECT_OPTIMIZE_SF_MASK );
+  LoRa.writeRegister(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_7_12 );
+  LoRa.writeRegister(REG_PA_CONFIG, 0b11111111); // That's for the transceiver
+  LoRa.writeRegister(REG_PA_DAC, 0x87); // That's for the transceiver
+  LoRa.writeRegister(REG_LNA, 00); // TURN OFF LNA FOR TRANSMIT
+  LoRa.idle();
 }
 
 
