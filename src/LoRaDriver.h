@@ -41,6 +41,8 @@ void SX1276SetModem();
 uint8_t SX1276Read( uint16_t addr );
 void writeRegisterBits(uint8_t reg, uint8_t value, uint8_t mask);
 extern unsigned int wakeflag;
+extern int commandQueue[255];
+extern int curCommand;
 
 uint8_t setRegValue(uint8_t reg, uint8_t value, uint8_t msb, uint8_t lsb)
 {
@@ -169,17 +171,23 @@ void onReceive(int packetSize)
   //in car mode
   if (incoming[0] == 0xF8)
   {
-    LoraCommand=1;
+    curCommand++;
+    commandQueue[curCommand]=1;
+    //LoraCommand=1;
     wakeflag++;
   }
   if (incoming[0] == 0xFC)
   {
-     LoraCommand=2;
-     wakeflag++;
+    curCommand++;
+    commandQueue[curCommand]=2;
+    //LoraCommand=2;
+    wakeflag++;
   }
   if (incoming[0] == 0x08)
   {
-     LoraCommand=3;
+    curCommand++;
+    commandQueue[curCommand]=3;
+    //LoraCommand=3;
   }
   if (incoming[0] == 0xAA)
   {
@@ -189,7 +197,6 @@ void onReceive(int packetSize)
   }
   if(incoming[0] == 0x20)
   {
-
      LoraMessage = incoming;
   }
 
