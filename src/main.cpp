@@ -133,7 +133,7 @@ SimpleMenu Menu[] = {
   //SimpleMenu("Cur Temp",&mainValue),
   SimpleMenu("Start", fStart),
   SimpleMenu("Stop", fStop),
-  SimpleMenu("Send-OK", fMessage),  
+  SimpleMenu("Send-OK", sendStatus),  
   SimpleMenu("Configure", 4, MenuSub)
 };
 
@@ -489,8 +489,15 @@ void setup()
     {
       displayMsgS("speed done!");
       sprintf(tempmsg,"speed %d",speed);
-      displayMsgS1(tempmsg);
+      
+      //displayMsgS1(tempmsg);
       MyHeater.sync=true;
+      //read for foolresync
+      int size=mySerial.read();
+      mySerial.readBytes(tempStr,size);
+      size=mySerial.read();
+      size=mySerial.read();
+      
       break;
     }
 
