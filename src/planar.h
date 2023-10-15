@@ -224,7 +224,7 @@ class Heater
                                           - `01`: Starting
                                           - `04`: Running
                                           - `05`: Shutting down
-                                          – `06`: Testing enviroment
+                                          – `06`: Testing environment
                                           – `08`: Ventilation
                                     - `fs`: set fan speed min=0x45, max=0x70
                                     - `gs`: get fan speed min=0x45, max=0x70
