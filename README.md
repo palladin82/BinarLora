@@ -27,3 +27,4 @@ ESP32 TTGO LoRa32 project for remote control AutoTerm Binar 5S
 <p align="center"> 
 <img src=https://github.com/palladin82/BinarLora/raw/main/img/binar.jpg>
 </p>
+ 
