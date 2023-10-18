@@ -3,8 +3,6 @@
 ESP32 TTGO LoRa32 project for remote control AutoTerm Binar 5S
 
 
-
-
     00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
                    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 
     pr id LN    CM PL                xx    CT ss    fs gs    vv    vv gc
@@ -12,7 +10,7 @@ ESP32 TTGO LoRa32 project for remote control AutoTerm Binar 5S
     - `xx`: Battery voltage * 10, e.g. `0x84` equals 13.2V
             - 'xx': Battery voltage * 10
             - `CT`: core temperature
-            - `ss`: Status
+            - `ss`: Status / OR TIMER ???
                     - `00`: Heater off
                     - `01`: Starting
                     - `04`: Running
@@ -25,3 +23,7 @@ ESP32 TTGO LoRa32 project for remote control AutoTerm Binar 5S
                     decreases slowly down to `0x46` during regular operation (status `0x04`). 
                     Also, this value seems to appear twice, god knows, why.
             - `gc`: Glow current (0-9A) during startup
+
+<p align="center"> 
+<img src=https://github.com/palladin82/BinarLora/raw/main/img/binar.jpg>
+</p>
