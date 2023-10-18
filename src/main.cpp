@@ -20,7 +20,6 @@
 int temp = 55;
 unsigned int wakeflag=0;
 int tick=0;
-int timetosleep=600; //60*1 sec
 bool crcok=false;
 bool pult=false;
 
@@ -28,6 +27,11 @@ Heater MyHeater;
 S_PACKET data;
 
 static const unsigned long REFRESH_INTERVAL = 1000; // ms
+int timetosleep=600; //60*1 sec
+
+int commandQueue[255];
+int curCommand=0;
+
 static unsigned long lastRefreshTime = 0;
 
 #define PIN_INPUT 0
@@ -133,7 +137,7 @@ SimpleMenu Menu[] = {
   //SimpleMenu("Cur Temp",&mainValue),
   SimpleMenu("Start", fStart),
   SimpleMenu("Stop", fStop),
-  SimpleMenu("Send-OK", fMessage),  
+  SimpleMenu("Send-OK", sendStatus),  
   SimpleMenu("Configure", 4, MenuSub)
 };
 
@@ -489,8 +493,15 @@ void setup()
     {
       displayMsgS("speed done!");
       sprintf(tempmsg,"speed %d",speed);
-      displayMsgS1(tempmsg);
+      
+      //displayMsgS1(tempmsg);
       MyHeater.sync=true;
+      //read for foolresync
+      int size=mySerial.read();
+      mySerial.readBytes(tempStr,size);
+      size=mySerial.read();
+      size=mySerial.read();
+      
       break;
     }
 
@@ -552,6 +563,27 @@ void loop()
 
 		lastRefreshTime += REFRESH_INTERVAL;
     
+    if(curCommand>0)
+    {
+      switch(commandQueue[curCommand])
+      {
+        case 0: sendPing();
+                curCommand--;
+              break;
+        case 1: fStart();
+                curCommand--;
+              break;
+        case 2: fStop();
+                curCommand--;
+              break;
+        case 3: sendStatus();
+                curCommand--;
+              break;
+      }
+    }
+    else sendPing();
+/*
+
 
     if(LoraCommand==0)
     {
@@ -577,7 +609,7 @@ void loop()
         sendStatus();
         LoraCommand=0;
     }
-    
+*/    
     if(LoraBatt>0)MyHeater.Battery=LoraBatt;
     displayBat(MyHeater.Battery);
     if(LoraStatus>0)MyHeater.Status=LoraStatus;
