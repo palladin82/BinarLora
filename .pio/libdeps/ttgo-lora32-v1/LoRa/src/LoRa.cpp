@@ -150,6 +150,76 @@ int LoRaClass::begin(long frequency)
   return 1;
 }
 
+
+int LoRaClass::prebegin(long frequency)
+{
+#if defined(ARDUINO_SAMD_MKRWAN1300) || defined(ARDUINO_SAMD_MKRWAN1310)
+  pinMode(LORA_IRQ_DUMB, OUTPUT);
+  digitalWrite(LORA_IRQ_DUMB, LOW);
+
+  // Hardware reset
+  pinMode(LORA_BOOT0, OUTPUT);
+  digitalWrite(LORA_BOOT0, LOW);
+
+  pinMode(LORA_RESET, OUTPUT);
+  digitalWrite(LORA_RESET, HIGH);
+  delay(200);
+  digitalWrite(LORA_RESET, LOW);
+  delay(200);
+  digitalWrite(LORA_RESET, HIGH);
+  delay(50);
+#endif
+
+  // setup pins
+  pinMode(_ss, OUTPUT);
+  // set SS high
+  digitalWrite(_ss, HIGH);
+
+  if (_reset != -1) {
+    pinMode(_reset, OUTPUT);
+
+    // perform reset
+    digitalWrite(_reset, LOW);
+    delay(10);
+    digitalWrite(_reset, HIGH);
+    delay(10);
+  }
+
+  // start SPI
+  _spi->begin();
+
+  // check version
+  uint8_t version = readRegister(REG_VERSION);
+  if (version != 0x12) {
+    return 0;
+  }
+
+  // put in sleep mode
+  sleep();
+
+  // set frequency
+  //setFrequency(frequency);
+
+  // set base addresses
+  //writeRegister(REG_FIFO_TX_BASE_ADDR, 0);
+  //writeRegister(REG_FIFO_RX_BASE_ADDR, 0);
+
+  // set LNA boost
+  //writeRegister(REG_LNA, readRegister(REG_LNA) | 0x03);
+
+  // set auto AGC
+  //writeRegister(REG_MODEM_CONFIG_3, 0x04);
+
+  // set output power to 17 dBm
+  //setTxPower(17);
+
+  // put in standby mode
+  idle();
+
+  return 1;
+}
+
+
 void LoRaClass::end()
 {
   // put in sleep mode

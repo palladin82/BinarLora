@@ -35,6 +35,7 @@ public:
   LoRaClass();
 
   int begin(long frequency);
+  int prebegin(long frequency);
   void end();
 
   int beginPacket(int implicitHeader = false);
