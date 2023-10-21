@@ -373,7 +373,7 @@ void doubleClick()
 {
 
   tick=0;
-  TopMenu.next();
+  TopMenu.up();
   
 }
 
@@ -381,7 +381,7 @@ void Click()
 {
 
   tick=0;
-  TopMenu.back();
+  TopMenu.down();
 }
 
 void longClick()

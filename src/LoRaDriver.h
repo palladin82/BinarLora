@@ -17,7 +17,7 @@
 #define REG_PA_CONFIG            0x09
 #define REG_PA_DAC               0x4d
 #define REG_LNA                  0x0c
-#define Channel                  914E6
+#define Channel                  8683E5
 
 const int csPin = 7;          // LoRa radio chip select
 const int resetPin = 6;       // LoRa radio reset
