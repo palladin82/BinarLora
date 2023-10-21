@@ -15,6 +15,12 @@
 #include <SoftwareSerial.h>
 #include "display.h"
 #include "LoRaDriver.h"
+
+
+static const uint16_t screenWidth  = 480;
+static const uint16_t screenHeight = 320;
+
+
 #define BUTTON_PIN_BITMASK 0x000000001
 
 int temp = 55;
@@ -250,7 +256,7 @@ void setSprd(int *param)
 {
   int index = * (int *) param;
   MyHeater.Status = uint8_t(index);
-  if(index==5&&debug) Serial.println("OK!!!!!!!!!!!!");
+  if(index==5&&debug) Serial.println("OK!");
   //return true;
 }
 
@@ -306,6 +312,7 @@ void fStart()
     mySerialTX.write(buf, MyHeater.start.len+7);
     if(MyHeater.sync==false)sendHEX(0xF8);
     Serial.println("Request START");
+    displayMsg("Request START");
     delay(300);
     sendStatus();
     if(debug)
@@ -322,6 +329,7 @@ void fStop()
     mySerialTX.write(buf, MyHeater.shutdown.len+7);
     if(MyHeater.sync==false)sendHEX(0xFC);
     Serial.println("Request STOP");
+    displayMsg("Request STOP");
     delay(300);
     sendStatus();
     if(debug)
@@ -356,58 +364,33 @@ void exitF()
 
 
 
-/*void displayValue(SimpleMenu *_menu)
-{
-  int menucnt = 10;
-  u8g2->setDrawColor(0);
-  u8g2->drawBox(0, 0, 64, 26);
-
-
-  u8g2->setDrawColor(1);
-  u8g2->drawBox(0, 0, 64, 12);
-  char buf[256];
-  snprintf(buf, sizeof(buf), "%s %s", _menu->name,_menu->getUValue());  
-  u8g2->setDrawColor(0);
-  u8g2->drawStr(0, menucnt, buf);
-  u8g2->sendBuffer();
-}*/
 
 
 
 
-//SPIClass SDSPI(HSPI);
 
 void doubleClick()
 {
-  //Serial.println("DBL");
+
   tick=0;
-  TopMenu.up();
+  TopMenu.next();
   
 }
 
 void Click()
 {
-  //Serial.println("CL");
+
   tick=0;
-  TopMenu.down();
+  TopMenu.back();
 }
 
 void longClick()
 {
-  //Serial.println("LNG-CL");
+
   tick=0;
   TopMenu.select();
 }
 
-//std::atomic<bool> rxPending(false);
-
-/*void receiveHandler() 
-{
-    S_PACKET data;
-    data = ReadMySerial();
-    MyHeater.Planar_response(data);
-
-}*/
 
 
 void setup()
@@ -494,7 +477,7 @@ void setup()
       displayMsgS("speed done!");
       sprintf(tempmsg,"speed %d",speed);
       
-      //displayMsgS1(tempmsg);
+  
       MyHeater.sync=true;
       //read for foolresync
       int size=mySerial.read();
@@ -659,7 +642,7 @@ void sendStatus()
 S_PACKET ReadMySerial()
 {
   static S_PACKET temp;
-  //memset(temp,0,255);
+
   uint16_t crc;
   uint16_t c_crc;
   char reading[255];
@@ -673,7 +656,7 @@ S_PACKET ReadMySerial()
 
   if (mySerial.available())
   {
-      //reading[0]
+
       temp.preamble=mySerial.read();
       
       if(debug)
@@ -727,7 +710,7 @@ S_PACKET ReadMySerial()
   packetSize = serialize(reading, &temp);
 
   c_crc=CRC16(reading,packetSize-2);
-  //c_crc = bswap16(c_crc); //reverse byte order
+
 
   if (temp.crc!=c_crc) 
   {
