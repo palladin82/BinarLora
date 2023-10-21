@@ -102,7 +102,7 @@ void setbaud(int *baud)
 
 
 int zero=0, one=1, four=4, five=5;
-int menuMaxShow=5;
+int menuMaxShow=3;
 
 SimpleMenu MenuSubSprd[] = {
   SimpleMenu("..", exitF),
@@ -143,11 +143,11 @@ SimpleMenu Menu[] = {
   //SimpleMenu("Cur Temp",&mainValue),
   SimpleMenu("Start", fStart),
   SimpleMenu("Stop", fStop),
-  SimpleMenu("Send-OK", sendStatus),  
-  SimpleMenu("Configure", 4, MenuSub)
+  SimpleMenu("Send-OK", sendStatus)  
+  //SimpleMenu("Configure", 4, MenuSub)
 };
 
-SimpleMenu TopMenu(4, Menu);
+SimpleMenu TopMenu(3, Menu);
 
 void goto_deepsleep()
 {
@@ -198,12 +198,12 @@ void displayMenu(SimpleMenu *_menu)
   SimpleMenu *prev;
   
   u8g2->setDrawColor(0);
-  u8g2->drawBox(0, 0, 64, 60);
+  u8g2->drawBox(0, 0, 63, 10*menuMaxShow);
 
 
 
   u8g2->setDrawColor(1);
-  u8g2->drawBox(0, 0, 64, 12);
+  u8g2->drawBox(0, 0, 634, 12);
   
   char buf[256];
   snprintf(buf, sizeof(buf), "%s", _menu->name);
@@ -245,8 +245,8 @@ SimpleMenu* ShowAllNext(SimpleMenu *menu, char *buf)
     if (next != NULL)
     {
         //displayMsg("menu ok");
-        snprintf(buf, sizeof(buf), "%s", next->name);
-        displayMsg(buf);
+        //snprintf(buf, sizeof(buf), "%s", next->name);
+        //displayMsg(buf);
     }
     return next;
 }
@@ -519,7 +519,8 @@ void loop()
   } 
   
   
-  onReceive(LoRa.parsePacket());
+    onReceive(LoRa.parsePacket());
+
 
 
   if(millis() - lastRefreshTime >= REFRESH_INTERVAL)
@@ -570,12 +571,16 @@ void loop()
     if(LoraBatt>0)MyHeater.Battery=LoraBatt;
     displayBat(MyHeater.Battery);
     if(LoraStatus>0)MyHeater.Status=LoraStatus;
+
     displayStatus(MyHeater.GetStatus());
     char temps[30];
+
     if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"%d %d %d",MyHeater.temp1,MyHeater.temp2,MyHeater.temp3);
     else sprintf(temps,"%d*",LoraTemp);
     displayTemp(temps);
     
+    if(MyHeater.temp1>79)fStop();
+
     if(tick > 0 && wakeflag > 0)
     {
         tick=0;

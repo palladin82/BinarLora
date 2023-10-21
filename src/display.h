@@ -376,7 +376,7 @@ void init_oled()
   Wire.beginTransmission(0x3C);
   if (Wire.endTransmission() == 0) {
     //Serial.println("Started OLED");
-    u8g2 = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
+    u8g2 = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(U8G2_R2, U8X8_PIN_NONE);
     u8g2->begin();
     
     u8g2->clearBuffer();
@@ -396,10 +396,10 @@ void init_oled()
     u8g2->setDrawColor(1);
     u8g2->drawXBMP( 0, 0, 128, 64, image_data_Image);
     u8g2->sendBuffer();
-    //delay(3000);
+    delay(1000);
 
     u8g2->setFont(u8g2_font_haxrcorp4089_t_cyrillic);
-    u8g2->setDisplayRotation(U8G2_R1);
+    u8g2->setDisplayRotation(U8G2_R2);
     //u8g2->drawStr(10, 125, fbat);
 
 
@@ -413,9 +413,9 @@ void init_oled()
 void displayMsg(char* msg)
 {
   u8g2->setDrawColor(1);
-  u8g2->drawBox(0, 60, 64, 13);
+  u8g2->drawBox(0+65, 60-60, 64, 13);
   u8g2->setDrawColor(0);
-  u8g2->drawStr(0, 70, msg);
+  u8g2->drawStr(0+65, 70-60, msg);
   u8g2->sendBuffer();
   u8g2->setDrawColor(1);
 }
@@ -425,9 +425,9 @@ void displayMsgS(String msg)
   char chars[msg.length()+1];
   msg.toCharArray(chars,msg.length()+1);
   u8g2->setDrawColor(1);
-  u8g2->drawBox(0, 60, 64, 13);
+  u8g2->drawBox(0+65, 60-60, 64, 13);
   u8g2->setDrawColor(0);
-  u8g2->drawStr(0, 70, chars);
+  u8g2->drawStr(0+65, 70-60, chars);
   u8g2->sendBuffer();
   u8g2->setDrawColor(1);
 }
@@ -437,9 +437,9 @@ void displayMsgS1(String msg)
   char chars[msg.length()+1];
   msg.toCharArray(chars,msg.length()+1);
   u8g2->setDrawColor(1);
-  u8g2->drawBox(0, 70, 64, 13);
+  u8g2->drawBox(0+65, 70-60, 64, 13);
   u8g2->setDrawColor(0);
-  u8g2->drawStr(0, 80, chars);
+  u8g2->drawStr(0+65, 80-60, chars);
   u8g2->sendBuffer();
   u8g2->setDrawColor(1);
 }
@@ -452,10 +452,10 @@ void displayBat(uint8_t msg)
   
   
   u8g2->setDrawColor(0);
-  u8g2->drawBox(0, 115, 32, 13);
+  u8g2->drawBox(0, 115-62, 32, 13);
   u8g2->setDrawColor(1);
-  u8g2->drawXBM( 0, 115, bat_width, bat_height, image_batt);
-  u8g2->drawStr(10, 125, fbat);
+  u8g2->drawXBM( 0, 115-62, bat_width, bat_height, image_batt);
+  u8g2->drawStr(10, 125-62, fbat);
   u8g2->sendBuffer();
   u8g2->setDrawColor(1);
 }
@@ -463,10 +463,10 @@ void displayBat(uint8_t msg)
 void displayTemp(char* msg)
 {
   u8g2->setDrawColor(0);
-  u8g2->drawBox(0, 103, 64, 13);
+  u8g2->drawBox(0, 103-62, 64, 13);
   u8g2->setDrawColor(1);
-  u8g2->drawXBM( 0, 103, bat_width, bat_height, image_temp);
-  u8g2->drawStr(10, 113, msg);
+  u8g2->drawXBM( 0, 103-62, bat_width, bat_height, image_temp);
+  u8g2->drawStr(10, 113-62, msg);
   u8g2->sendBuffer();
   u8g2->setDrawColor(1);
 }
@@ -489,9 +489,9 @@ void displayX()
 void displayStatus(char *msg)
 {
   u8g2->setDrawColor(0);
-  u8g2->drawBox(35, 115, 64, 13);
+  u8g2->drawBox(35, 115-62, 64, 13);
   u8g2->setDrawColor(1);
-  u8g2->drawStr(35, 125, msg);
+  u8g2->drawStr(35, 125-62, msg);
   u8g2->sendBuffer();
   u8g2->setDrawColor(1);
 }

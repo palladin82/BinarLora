@@ -44,9 +44,10 @@ char r_23[] = "\xaa\x04\x04\x00\x23\x00\x32\x00\x00\x00\x00";
   0x0F: Status
         aa 03 00 00 0f 58 7c
                        00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13
-        pr id LN    CM PL                xx       ss             vv    vv
+        pr id LN    CM ss                xx       tm             vv    vv
         aa 04 13 00 0f 03 00 00 0a 7f 00 84 01 b2 04 00 37 37 00 6d 00 6d 00 64 c3 0a
-        - `xx`: Battery voltage * 10, e.g. `0x84` equals 13.2V
+                  - `CM`: current command
+                  - `xx`: Battery voltage * 10, e.g. `0x84` equals 13.2V
                   - `ss`: Status
                   - `00`: Heater off
                   - `01`: Starting
@@ -76,14 +77,16 @@ class Heater
     uint8_t Status=0;
     uint8_t Battery=1;
     uint8_t VentPower;
+    uint8_t TimeAS;
+    uint8_t Error;
     uint8_t VentOn;
     uint8_t PowerLevel;
     uint8_t Mode;
     uint8_t TempSetPoint;
 
-    uint8_t temp1=-10;
-    uint8_t temp2=-10;
-    uint8_t temp3=-10;
+    uint8_t temp1=10;
+    uint8_t temp2=10;
+    int temp3=800;
 
     S_PACKET start;
     S_PACKET shutdown;
@@ -155,10 +158,9 @@ class Heater
           {
             case 0: sprintf(msg,"Off");return msg; break;
             case 1: sprintf(msg,"Start");return msg; break;
-            case 3: sprintf(msg,"SEnd");return msg; break;
-            case 4: sprintf(msg,"Heat");return msg; break;
-            case 5: sprintf(msg,"Shut");return msg; break;
-            case 6: sprintf(msg,"H-idle");return msg; break;
+            case 3: sprintf(msg,"Warm");return msg; break;
+            case 4: sprintf(msg,"Run");return msg; break;
+            case 5: sprintf(msg,"Shut");return msg; break;            
             default: sprintf(msg,"E-%d",Status);return msg; break;
           }
           return msg;
@@ -212,14 +214,17 @@ class Heater
           case '\x11': //report panel temp
                       break;
           case '\x0f': //status ping
+                    //                   00 01 02 03 04 05 06 07 08 09 
+                    //H >>aa 04 0a 00 0f 00 01 00 1a 7f 00 7b 01 2b 00 | 50 ad
+                     //                  s1 s2 er ht et    bv ft ft
                     //    00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
                     /*                   00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 
-                          pr id LN    CM PL                xx    CT ss    fs gs    vv    vv gc
+                          pr id LN    CM ss                xx    CT tm    fs gs    vv    vv gc
                           aa 04 13 00 0f 03 00 00 0a 7f 00 84 01 b2 04 00 37 37 00 6d 00 6d 00 64 c3 0a
                           - `xx`: Battery voltage * 10, e.g. `0x84` equals 13.2V
                                     - 'xx': Battery voltage * 10
                                     - `CT`: core temperature
-                                    - `ss`: Status
+                                    - `ss`: Status 
                                           - `00`: Heater off
                                           - `01`: Starting
                                           - `04`: Running
@@ -227,18 +232,21 @@ class Heater
                                           – `06`: Testing environment
                                           – `08`: Ventilation
                                     - `fs`: set fan speed min=0x45, max=0x70
+                                    - `tm`: timer after start
                                     - `gs`: get fan speed min=0x45, max=0x70
                                     - `vv`: Ventilation power. During startup this value goes up to `0x96`, and then 
                                             decreases slowly down to `0x46` during regular operation (status `0x04`). 
                                             Also, this value seems to appear twice, god knows, why.
                                     - `gc`: Glow current (0-9A) during startup
                     */
-                      Status=data.payload[0x09];
-                      Battery=data.payload[0x06];
+                      Status=data.payload[0x00];
+                      Error=data.payload[0x02];
+                      Battery=data.payload[0x06];                      
+                      TimeAS=data.payload[0x09];
                       VentPower=data.payload[0x0e];
                       temp1=data.payload[3];                      
                       temp2=data.payload[4];
-                      temp3=data.payload[7];
+                      temp3=(data.payload[7]<<8) | data.payload[8];
                       break;
       }
     }
