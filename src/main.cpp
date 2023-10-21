@@ -582,34 +582,8 @@ void loop()
       }
     }
     else sendPing();
-/*
 
-
-    if(LoraCommand==0)
-    {
-        sendPing();
-
-        if(MyHeater.Status>0&&MyHeater.Status<6)sendStatus();
-    }
-    
-    if(LoraCommand==1)
-    {
-        fStart();
-        LoraCommand=0;
-    }
-    
-    if(LoraCommand==2)
-    {
-        fStop();
-        LoraCommand=0;
-    }
-    if(LoraCommand==3)
-    {
-        
-        sendStatus();
-        LoraCommand=0;
-    }
-*/    
+   
     if(LoraBatt>0)MyHeater.Battery=LoraBatt;
     displayBat(MyHeater.Battery);
     if(LoraStatus>0)MyHeater.Status=LoraStatus;
