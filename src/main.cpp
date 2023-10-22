@@ -574,9 +574,8 @@ void loop()
 
     displayStatus(MyHeater.GetStatus());
     char temps[30];
-
-    if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"%d %d %d",MyHeater.temp1,MyHeater.temp2,MyHeater.temp3);
-    else sprintf(temps,"%d*",LoraTemp);
+    if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"%d %d %d LR=%d",MyHeater.temp1,MyHeater.temp2,MyHeater.temp3,MyHeater.Error);
+    else sprintf(temps,"%d*",LoraTemp);\
     displayTemp(temps);
     
     if(MyHeater.temp1>79&&MyHeater.running)
