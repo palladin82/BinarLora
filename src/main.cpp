@@ -579,7 +579,10 @@ void loop()
     else sprintf(temps,"%d*",LoraTemp);
     displayTemp(temps);
     
-    if(MyHeater.temp1>79)fStop();
+    if(MyHeater.temp1>79&&MyHeater.running)
+    {
+      fStop();
+    }
 
     if(tick > 0 && wakeflag > 0)
     {
@@ -591,7 +594,7 @@ void loop()
       goto_deepsleep();     
      
     }
-    if(MyHeater.Mode!=4)tick++;
+    if(MyHeater.Status==0)tick++;
 	}
 
   

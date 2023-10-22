@@ -83,6 +83,7 @@ class Heater
     uint8_t PowerLevel;
     uint8_t Mode;
     uint8_t TempSetPoint;
+    bool running;
 
     uint8_t temp1=10;
     uint8_t temp2=10;
@@ -157,8 +158,9 @@ class Heater
           switch(Status)
           {
             case 0: sprintf(msg,"Off");return msg; break;
-            case 1: sprintf(msg,"Start");return msg; break;
-            case 3: sprintf(msg,"Warm");return msg; break;
+            case 1: sprintf(msg,"Starting");return msg; break;
+            case 2: sprintf(msg,"WarmUP");return msg; break;
+            case 3: sprintf(msg,"Heat");return msg; break;
             case 4: sprintf(msg,"Run");return msg; break;
             case 5: sprintf(msg,"Shut");return msg; break;            
             default: sprintf(msg,"E-%d",Status);return msg; break;
@@ -174,6 +176,7 @@ class Heater
                        TempSetPoint=data.payload[0x04];
                        VentOn=data.payload[0x05];
                        PowerLevel=data.payload[0x06];
+                       running=true;                       
                        break;//start                      
           case '\x02': //settings
           /* 
@@ -207,7 +210,8 @@ class Heater
                       recalc_crc_spacket(&start);
                       settingsOk=true;
                       break;
-          case '\x03': //shutdown
+          case '\x03': running=false;
+                       //shutdown
                       break;
           case '\x04': //initializations
                       break;
@@ -246,7 +250,7 @@ class Heater
                       VentPower=data.payload[0x0e];
                       temp1=data.payload[3];                      
                       temp2=data.payload[4];
-                      temp3=(data.payload[7]<<8) | data.payload[8];
+                      temp3=(data.payload[7]) | (data.payload[8]<<8);
                       break;
       }
     }
