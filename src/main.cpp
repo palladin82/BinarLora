@@ -310,15 +310,13 @@ void fStart()
     char buf[255];
     serialize(buf,&MyHeater.start);
     mySerialTX.write(buf, MyHeater.start.len+7);
-    if(MyHeater.sync==false)sendHEX(0xF8);
-    Serial.println("Request START");
+    if(MyHeater.sync==false)sendHEX(0xF8);    
     displayMsg("Request START");
-    delay(300);
+    
     sendStatus();
     if(debug)
     {
-      displayMsg(print(&MyHeater.start));
-      Serial.println(print(&MyHeater.start));
+      Serial.println("Request START");
     }
 }
 
@@ -327,15 +325,13 @@ void fStop()
     char buf[255];
     serialize(buf,&MyHeater.shutdown);
     mySerialTX.write(buf, MyHeater.shutdown.len+7);
-    if(MyHeater.sync==false)sendHEX(0xFC);
-    Serial.println("Request STOP");
+    if(MyHeater.sync==false)sendHEX(0xFC);    
     displayMsg("Request STOP");
-    delay(300);
+
     sendStatus();
     if(debug)
     {
-      displayMsg(print(&MyHeater.shutdown));
-      Serial.println(print(&MyHeater.shutdown));
+      Serial.println("Request STOP");
     }
 
   

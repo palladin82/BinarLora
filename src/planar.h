@@ -159,9 +159,9 @@ class Heater
           {
             case 0: sprintf(msg,"Off");return msg; break;
             case 1: sprintf(msg,"Starting");return msg; break;
-            case 2: sprintf(msg,"WarmUP");return msg; break;
+            case 2: sprintf(msg,"Warm");return msg; break;
             case 3: sprintf(msg,"Heat");return msg; break;
-            case 4: sprintf(msg,"Run");return msg; break;
+            case 4: sprintf(msg,"Purge");return msg; break;
             case 5: sprintf(msg,"Shut");return msg; break;            
             default: sprintf(msg,"E-%d",Status);return msg; break;
           }
