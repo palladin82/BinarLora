@@ -463,7 +463,7 @@ void displayBat(uint8_t msg)
 void displayTemp(char* msg)
 {
   u8g2->setDrawColor(0);
-  u8g2->drawBox(0, 103-62, 64, 13);
+  u8g2->drawBox(0, 103-62, 128, 13);
   u8g2->setDrawColor(1);
   u8g2->drawXBM( 0, 103-62, bat_width, bat_height, image_temp);
   u8g2->drawStr(10, 113-62, msg);
