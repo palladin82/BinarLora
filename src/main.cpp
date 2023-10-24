@@ -16,6 +16,9 @@
 #include "display.h"
 #include "LoRaDriver.h"
 
+TaskHandle_t Task1;
+void loop_task(void *pvParameters);
+
 
 static const uint16_t screenWidth  = 480;
 static const uint16_t screenHeight = 320;
@@ -493,8 +496,16 @@ void setup()
 
   mySerial.setTimeout(1000);
   
-
-  
+  xTaskCreatePinnedToCore(
+                    loop_task,   /* Task function. */
+                    "Task1",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        /* parameter of the task */
+                    1,           /* priority of the task */
+                    &Task1,      /* Task handle to keep track of created task */
+                    0);          /* pin task to core 1 */  
+                    
+  delay(100);
 
   
 
@@ -502,29 +513,46 @@ void setup()
 }
 
 
+void loop_task(void *pvParameters)
+{
+  
+  for(;;)
+  {
+    
+    
+
+    if(mySerial.available())
+    {
+      memset(&data,0,sizeof(data));
+      data=ReadMySerial();
+      
+      MyHeater.Planar_response(data);
+      
+      if(debug)
+      {        
+          Serial.println(print(&data));
+      }
+      
+    }
+    
+    vTaskDelay(1);
+  }
+}
+
+
 
 void loop()
 {
-
-  if(mySerial.available())
-  {
-    data=ReadMySerial();
-    
-    MyHeater.Planar_response(data);
-    if(debug)
-    {        
-        Serial.println(print(&data));
-    }  
-
-  } 
   
   
-    onReceive(LoRa.parsePacket());
+  onReceive(LoRa.parsePacket());
 
 
 
   if(millis() - lastRefreshTime >= REFRESH_INTERVAL)
 	{
+    //Serial.print("loop() running on core ");
+    //Serial.println(xPortGetCoreID());
     if(Serial.available()>0)
     {
         char temp;
