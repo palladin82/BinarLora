@@ -84,7 +84,7 @@ void LoRa_init()
   LoRa.idle();
   LoRa.setFrequency(Channel);
   LoRa.setOCP(240);
-  //LoRa.setTxPower(20, PA_OUTPUT_PA_BOOST_PIN);
+  LoRa.setTxPower(20, PA_OUTPUT_PA_BOOST_PIN);
   LoRa.setPreambleLength(6);
   LoRa.setCodingRate4(7);
   LoRa.setSpreadingFactor(12);
