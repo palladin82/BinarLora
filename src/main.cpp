@@ -15,6 +15,23 @@
 #include <HardwareSerial.h>
 #include "display.h"
 #include "LoRaDriver.h"
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#include <HTTPUpdateServer.h>
+
+#ifndef STASSID
+#define STASSID "Binar5SC"
+#define STAPSK  "12348765"
+#endif
+ 
+WebServer httpServer(80);
+HTTPUpdateServer httpUpdater;
+
+const char* host = "binar";
+const char* ssid = STASSID;
+const char* password = STAPSK;
 
 TaskHandle_t Task1;
 void loop_task(void *pvParameters);
@@ -156,7 +173,7 @@ SimpleMenu TopMenu(3, Menu);
 
 void goto_deepsleep()
 {
-  
+      WiFi.mode(WIFI_OFF);
      
 
       if(debug)
@@ -396,12 +413,10 @@ void longClick()
 
 void setup()
 {
+  WiFi.softAP(ssid, password);
+
   EEPROM.begin(256);
   
-
-  
-
-
   debug = EEPROM.read(0);
   
   pult = EEPROM.read(1);
@@ -507,7 +522,22 @@ void setup()
                     
   delay(100);
 
-  
+  IPAddress IP = WiFi.softAPIP();
+  //WiFi.begin(ssid, password);
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+    //Serial.println("WiFi failed, retrying.");
+  MDNS.begin(host);
+  if (MDNS.begin("esp32")) {
+    Serial.println("mDNS responder started");
+  }
+ 
+ 
+  httpUpdater.setup(&httpServer);
+  httpServer.begin();
+ 
+  MDNS.addService("http", "tcp", 80);
+  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
 
 // end setup
 }
@@ -544,7 +574,7 @@ void loop_task(void *pvParameters)
 void loop()
 {
   
-  
+  httpServer.handleClient();
   onReceive(LoRa.parsePacket());
 
 
