@@ -25,6 +25,7 @@ ESP32 TTGO LoRa32 project for remote control AutoTerm Binar 5S
             - `gc`: Glow current (0-9A) during startup
 
 <p align="center"> 
-<img src=https://github.com/palladin82/BinarRemote/raw/main/img/binar.jpg>
+<img src="https://github.com/palladin82/BinarRemote/raw/main/img/binar.jpg">
+<img src="https://github.com/palladin82/BinarRemote/raw/main/img/LilyGO TTGO Lora_6-1500x1500.jpg">
 </p>
  

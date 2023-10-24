@@ -12,7 +12,7 @@
 #include <SimpleMenu.h>
 #include <EEPROM.h>
 #include "planar.h"
-#include <SoftwareSerial.h>
+#include <HardwareSerial.h>
 #include "display.h"
 #include "LoRaDriver.h"
 
@@ -45,8 +45,34 @@ static unsigned long lastRefreshTime = 0;
 
 OneButton button(PIN_INPUT, true);
 
-SoftwareSerial mySerial(34, -1); // RX, TX
-SoftwareSerial mySerialTX(-1, 23, true); //need to be inverted
+
+//HardwareSerial mySerial(34, -1); // RX, TX (Serial1)
+//HardwareSerial mySerialTX(-1, 23, true); //need to be inverted (Serial2 inverted)
+HardwareSerial mySerial(1);
+HardwareSerial mySerialTX(2);
+
+
+/*
+in file .platformio/packages/framework-arduinoesp.../cores/esp32/hardwareserial.cpp
+line 360-360 and 368-369 set tx/rx as u see
+
+#if SOC_UART_NUM > 1                   // may save some flash bytes...
+            case UART_NUM_1:
+               if (rxPin < 0 && txPin < 0) {
+                    rxPin = 34;
+                    txPin = 35;
+                }
+            break;
+#endif
+#if SOC_UART_NUM > 2                   // may save some flash bytes...
+            case UART_NUM_2:
+               if (rxPin < 0 && txPin < 0) {
+                    rxPin = 39;
+                    txPin = 23;
+
+
+*/
+
 
 // Variables will change:
 int lastState = HIGH; // the previous state from the input pin
@@ -74,7 +100,7 @@ void sendPing();
 void sendWelcome();
 void ToggleDebug();
 void setSprd(int *param);
-void setbaud(int *baud);
+void setbaud(long unsigned baud);
 
 SimpleMenu* ShowAllNext(SimpleMenu *menu, char *buf);
 
@@ -89,13 +115,14 @@ S_PACKET ReadMySerial();
 
 //uint8_t setRegValue(uint8_t reg, uint8_t value, uint8_t msb, uint8_t lsb);
 
-void setbaud(int *baud)
+void setbaud(long unsigned baud)
 {
 
-  mySerial.end();
-  mySerialTX.end();
-  mySerial.begin(*baud);
-  mySerialTX.begin(*baud);
+  //mySerial.end();
+  //mySerialTX.end();
+  mySerial.updateBaudRate(baud);
+  //begin(*baud);
+  mySerialTX.updateBaudRate(baud);
   
 }
 
@@ -109,34 +136,9 @@ SimpleMenu MenuSubSprd[] = {
   SimpleMenu("OFF", setSprd, 0),
   SimpleMenu("Start", setSprd, 1),
   SimpleMenu("RUN", setSprd, 4),
-  SimpleMenu("Shut", setSprd, 5),
-  //SimpleMenu("Waiting", CallbackP(setSprd, &zero)),
-  //SimpleMenu("Waiting", CallbackP(setSprd, &one)),
-  //SimpleMenu("Waiting", CallbackP(setSprd, &four)),
-  //SimpleMenu("Waiting", CallbackP(setSprd, &five))
-  
-};
+  SimpleMenu("Shut", setSprd, 5)
+  };
 
-SimpleMenu MenuSubBw[11] = {
-  SimpleMenu("..", exitF),
-  SimpleMenu("1200", setbaud,1200),
-  SimpleMenu("2400", setbaud,2400),
-  SimpleMenu("4800", setbaud,4800),
-  SimpleMenu("9600", setbaud,9600),
-  SimpleMenu("4800", setbaud,4800),
-  SimpleMenu("41.7E3", setBw),
-  SimpleMenu("62.5E3", setBw),
-  SimpleMenu("125E3", setBw),
-  SimpleMenu("250E3", setBw),
-  SimpleMenu("500E3", setBw)
-};
-
-SimpleMenu MenuSub[] = {
-  SimpleMenu("..", exitF),
-  SimpleMenu("Set Status", 8, MenuSubSprd),
-  SimpleMenu("Bandwith", 11, MenuSubBw),
-  SimpleMenu("Toggle Debug", ToggleDebug)
-};
 
 
 SimpleMenu Menu[] = {
@@ -144,7 +146,7 @@ SimpleMenu Menu[] = {
   SimpleMenu("Start", fStart),
   SimpleMenu("Stop", fStop),
   SimpleMenu("Send-OK", sendStatus)  
-  //SimpleMenu("Configure", 4, MenuSub)
+
 };
 
 SimpleMenu TopMenu(3, Menu);
@@ -416,9 +418,11 @@ void setup()
   Serial.begin(115200);                   // initialize serial
   while (!Serial);
   Serial.print("Hello\r\n");
+  mySerial.begin(2400);
+  mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
 
   int count=0;
-  int speed=0;
+  unsigned long speed=0;
   
   
   LoRa_init();
@@ -437,13 +441,13 @@ void setup()
     if(count==6) speed = 57600;
     if(count==7) speed = 115200;
     
+    setbaud(speed);
    
     char tempmsg[64];
     sprintf(tempmsg,"try %d",speed);
     displayMsgS(tempmsg);
 
-    mySerial.begin(speed);
-    mySerialTX.begin(speed);
+
     mySerial.setTimeout(200);
   
     char tempStr[255];
