@@ -41,7 +41,7 @@ void SX1276SetModem();
 uint8_t SX1276Read( uint16_t addr );
 void writeRegisterBits(uint8_t reg, uint8_t value, uint8_t mask);
 bool  GetFrequencyErrorbool();
-void  SetPPMoffsetReg(long offset);
+void  SetPPMoffsetReg(float offset);
 extern unsigned int wakeflag;
 extern int commandQueue[255];
 extern int curCommand;
@@ -91,6 +91,8 @@ void LoRa_init()
   LoRa.setCodingRate4(7);
   LoRa.setSpreadingFactor(12);
   LoRa.setSignalBandwidth(125E3);
+  //LoRa.enableCrc();
+  //LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3,RF_RXCONFIG_AGCAUTO_OFF);
   writeRegisterBits(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_7_12, SX127X_DETECT_OPTIMIZE_SF_MASK );
   LoRa.writeRegister(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_7_12 );
   LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON|SX127X_LNA_GAIN_1);
@@ -217,12 +219,15 @@ void onReceive(int packetSize)
   }
 
   //freq correction!!!
-  long ferr=0;
-  if(GetFrequencyErrorbool())
-  {
+  float ferr=0;
+  //if(GetFrequencyErrorbool())
+  //{
+    char msg[255];
+    sprintf(msg,"ferr=%.2f",ferr);
+    displayMsgS(msg);
     ferr=LoRa.packetFrequencyError();
     SetPPMoffsetReg(ferr);
-  }
+  //}
 
 }
 
@@ -313,10 +318,10 @@ bool  GetFrequencyErrorbool()
 
 
 
-void  SetPPMoffsetReg(long offset)
+void  SetPPMoffsetReg(float offset)
 {
   float tf;
-  tf = ((float)offset)/(float)Channel;
+  tf = (offset)/(float)Channel;
   tf *= 1000000.0;
   
   if (tf < 100.0 && tf > -100.0)

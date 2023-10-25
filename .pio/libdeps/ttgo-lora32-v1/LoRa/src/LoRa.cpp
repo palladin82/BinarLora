@@ -341,7 +341,7 @@ float LoRaClass::packetSnr()
   return ((int8_t)readRegister(REG_PKT_SNR_VALUE)) * 0.25;
 }
 
-long LoRaClass::packetFrequencyError()
+float LoRaClass::packetFrequencyError()
 {
   int32_t freqError = 0;
   freqError = static_cast<int32_t>(readRegister(REG_FREQ_ERROR_MSB) & B111);
@@ -357,7 +357,8 @@ long LoRaClass::packetFrequencyError()
   const float fXtal = 32E6; // FXOSC: crystal oscillator (XTAL) frequency (2.5. Chip Specification, p. 14)
   const float fError = ((static_cast<float>(freqError) * (1L << 24)) / fXtal) * (getSignalBandwidth() / 500000.0f); // p. 37
 
-  return static_cast<long>(fError);
+  //return static_cast<long>(fError);
+  return fError;
 }
 
 int LoRaClass::rssi()
@@ -515,7 +516,7 @@ void LoRaClass::setTxPower(int level, int outputPin)
 
       // High Power +20 dBm Operation (Semtech SX1276/77/78/79 5.4.3.)
       writeRegister(REG_PA_DAC, 0x87);
-      setOCP(140);
+      setOCP(240);
     } else {
       if (level < 2) {
         level = 2;
@@ -525,7 +526,7 @@ void LoRaClass::setTxPower(int level, int outputPin)
       setOCP(100);
     }
 
-    writeRegister(REG_PA_CONFIG, PA_BOOST | (level - 2));
+    writeRegister(REG_PA_CONFIG, PA_BOOST | (level-2));
   }
 }
 

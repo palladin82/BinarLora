@@ -80,7 +80,7 @@ line 360-360 and 368-369 set tx/rx as u see
             case UART_NUM_1:
                if (rxPin < 0 && txPin < 0) {
                     rxPin = 34;
-                    txPin = 35;
+                    txPin = 17;
                 }
             break;
 #endif
@@ -512,14 +512,14 @@ void setup()
 
   mySerial.setTimeout(1000);
   
-  xTaskCreatePinnedToCore(
-                    loop_task,   /* Task function. */
-                    "Task1",     /* name of task. */
-                    10000,       /* Stack size of task */
-                    NULL,        /* parameter of the task */
-                    1,           /* priority of the task */
-                    &Task1,      /* Task handle to keep track of created task */
-                    0);          /* pin task to core 1 */  
+ // xTaskCreatePinnedToCore(
+ //                   loop_task,   /* Task function. */
+ //                   "Task1",     /* name of task. */
+ //                   10000,       /* Stack size of task */
+ //                   NULL,        /* parameter of the task */
+ //                   1,           /* priority of the task */
+ //                   &Task1,      /* Task handle to keep track of created task */
+ //                   0);          /* pin task to core 1 */  
                     
   delay(100);
 
@@ -578,6 +578,20 @@ void loop()
   httpServer.handleClient();
   onReceive(LoRa.parsePacket());
 
+
+  if(mySerial.available())
+    {
+      memset(&data,0,sizeof(data));
+      data=ReadMySerial();
+      
+      MyHeater.Planar_response(data);
+      
+      if(debug)
+      {        
+          Serial.println(print(&data));
+      }
+      
+    }
 
 
   if(millis() - lastRefreshTime >= REFRESH_INTERVAL)
