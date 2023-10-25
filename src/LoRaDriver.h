@@ -40,6 +40,8 @@ static void RxChainCalibration( void );
 void SX1276SetModem();
 uint8_t SX1276Read( uint16_t addr );
 void writeRegisterBits(uint8_t reg, uint8_t value, uint8_t mask);
+bool  GetFrequencyErrorbool();
+void  SetPPMoffsetReg(long offset);
 extern unsigned int wakeflag;
 extern int commandQueue[255];
 extern int curCommand;
@@ -214,6 +216,14 @@ void onReceive(int packetSize)
      LoraMessage = incoming;
   }
 
+  //freq correction!!!
+  long ferr=0;
+  if(GetFrequencyErrorbool())
+  {
+    ferr=LoRa.packetFrequencyError();
+    SetPPMoffsetReg(ferr);
+  }
+
 }
 
 
@@ -291,4 +301,27 @@ void writeRegisterBits(uint8_t reg, uint8_t value, uint8_t mask)
         uint8_t newValue = (currentValue & ~mask) | (value & mask);
         LoRa.writeRegister(reg, newValue);
     
+}
+
+
+
+bool  GetFrequencyErrorbool()
+{
+  return (LoRa.readRegister(SX127X_REG_FEI_MSB) & 0b1000) >> 3; // returns true if pos freq error, neg if false
+}
+
+
+
+
+void  SetPPMoffsetReg(long offset)
+{
+  float tf;
+  tf = ((float)offset)/(float)Channel;
+  tf *= 1000000.0;
+  
+  if (tf < 100.0 && tf > -100.0)
+  {
+        LoRa.writeRegister(SX127x_PPMOFFSET, (uint8_t)tf);
+  }
+ 
 }
