@@ -414,6 +414,7 @@ void longClick()
 void setup()
 {
   WiFi.softAP(ssid, password);
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);
 
   EEPROM.begin(256);
   
