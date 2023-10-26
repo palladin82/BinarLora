@@ -43,7 +43,7 @@ static void RxChainCalibration( void );
 void SX1276SetModem();
 uint8_t SX1276Read( uint16_t addr );
 void writeRegisterBits(uint8_t reg, uint8_t value, uint8_t mask);
-bool  GetFrequencyErrorbool();
+//bool  GetFrequencyErrorbool();
 void  SetPPMoffsetReg(float offset);
 extern unsigned int wakeflag;
 extern int commandQueue[255];
@@ -86,17 +86,21 @@ void LoRa_init()
   //RxChainCalibration();
   LoRa.begin(currChannel);
   LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_SLEEP);
+  LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_SLEEP);
+  LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_SLEEP);
   LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_LORA); //must be written in sleep mode
   LoRa.idle();
   LoRa.setFrequency(Channel);
   LoRa.setOCP(240);
   LoRa.setTxPower(20, PA_OUTPUT_PA_BOOST_PIN);
-  LoRa.setPreambleLength(6);
+  LoRa.writeRegister(REG_PA_CONFIG, 0xff);
+  LoRa.setPreambleLength(18);
   LoRa.setCodingRate4(7);
   LoRa.setSpreadingFactor(12);
-  LoRa.setSignalBandwidth(125E3);
+  LoRa.setSignalBandwidth(62.5E3);
   //LoRa.enableCrc();
   //LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3,RF_RXCONFIG_AGCAUTO_OFF);
+  LoRa.writeRegister(SX127X_REG_DETECT_OPTIMIZE, 0x63);
   writeRegisterBits(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_7_12, SX127X_DETECT_OPTIMIZE_SF_MASK );
   LoRa.writeRegister(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_7_12 );
   LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON|SX127X_LNA_GAIN_1);
@@ -321,10 +325,6 @@ void writeRegisterBits(uint8_t reg, uint8_t value, uint8_t mask)
 
 
 
-bool  GetFrequencyErrorbool()
-{
-  return (LoRa.readRegister(SX127X_REG_FEI_MSB) & 0b1000) >> 3; // returns true if pos freq error, neg if false
-}
 
 
 
