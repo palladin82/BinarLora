@@ -422,6 +422,8 @@ void setup()
   
   pult = EEPROM.read(1);
 
+
+
   MyHeater.init();
   
 
@@ -813,3 +815,8 @@ S_PACKET ReadMySerial()
 
   return temp;
 }
+
+
+
+
+

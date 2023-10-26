@@ -18,6 +18,9 @@
 #define REG_PA_DAC               0x4d
 #define REG_LNA                  0x0c
 #define Channel                  9093E5
+#define bandwidth                125E3
+
+int64_t currChannel=Channel;
 
 const int csPin = 7;          // LoRa radio chip select
 const int resetPin = 6;       // LoRa radio reset
@@ -77,10 +80,11 @@ void setSprd()
 void LoRa_init()
 {
       // override the default CS, reset, and IRQ pins (optional)
+  
   LoRa.setPins(RADIO_CS_PIN, RADIO_RST_PIN, RADIO_DIO0_PIN);// set CS, reset, IRQ pin
-  LoRa.prebegin(Channel);
-  RxChainCalibration();
-  LoRa.begin(Channel);
+  LoRa.prebegin(currChannel);
+  //RxChainCalibration();
+  LoRa.begin(currChannel);
   LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_SLEEP);
   LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_LORA); //must be written in sleep mode
   LoRa.idle();
@@ -220,14 +224,21 @@ void onReceive(int packetSize)
 
   //freq correction!!!
   float ferr=0;
-  //if(GetFrequencyErrorbool())
-  //{
-    char msg[255];
-    sprintf(msg,"ferr=%.2f",ferr);
-    displayMsgS(msg);
-    ferr=LoRa.packetFrequencyError();
-    SetPPMoffsetReg(ferr);
-  //}
+  int32_t freqError = ((LoRa.readRegister(0x28) & 0B111)<<16) + (LoRa.readRegister(0x29)<<8) + LoRa.readRegister(0x2a);
+  
+  int32_t bit=(freqError & (1<<19));
+
+  if (LoRa.readRegister(0x28) & B1000) 
+  { // Sign bit is on
+    freqError -= 524288; // B1000'0000'0000'0000'0000
+  }
+
+  float tf=((float)freqError*16777216/32E6)* (float)125 / 500.0f * 0.95*0.0001;
+
+  
+  
+  SetPPMoffsetReg(tf);
+  
 
 }
 
@@ -320,13 +331,19 @@ bool  GetFrequencyErrorbool()
 
 void  SetPPMoffsetReg(float offset)
 {
-  float tf;
-  tf = (offset)/(float)Channel;
-  tf *= 1000000.0;
+  /*uint8_t frfMsb = LoRa.readRegister(0x06);
+  uint8_t frfMid = LoRa.readRegister(0x07);
+  uint8_t frfLsb = LoRa.readRegister(0x08);
+*/
+  char msg[255]; 
+  currChannel -= offset*1E4;
   
-  if (tf < 100.0 && tf > -100.0)
-  {
-        LoRa.writeRegister(SX127x_PPMOFFSET, (uint8_t)tf);
-  }
- 
+  int offs=round(offset);
+  //currfreq -= offs;
+  //LoRa.setFrequency(currChannel);
+  
+
+  sprintf(msg,"%uk %.1fk",currChannel/1000, offset);
+  displayMsgS(msg);
+
 }
