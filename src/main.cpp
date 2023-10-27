@@ -653,7 +653,7 @@ void loop()
     else sprintf(temps,"%d*",LoraTemp);\
     displayTemp(temps);
     
-    if(MyHeater.temp1>79&&MyHeater.running)
+    if(MyHeater.temp1>79&&(MyHeater.Mode==2||MyHeater.Mode==3))
     {
       fStop();
     }
@@ -674,8 +674,11 @@ void loop()
   
   button.tick();
 
-
-  
+  if((millis() - lastReg.lasttime > RegCheckTime) && lastReg.lastgood)
+  {
+    LoRa.writeRegister(lastReg.regid,lastReg.value);
+    lastReg.lastgood=false;
+  }  
 
 
 }

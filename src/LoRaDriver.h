@@ -19,6 +19,7 @@
 #define REG_LNA                  0x0c
 #define Channel                  9093E5
 #define bandwidth                125E3
+#define RegCheckTime             15000
 
 int64_t currChannel=Channel;
 
@@ -48,6 +49,19 @@ void  SetPPMoffsetReg(float offset);
 extern unsigned int wakeflag;
 extern int commandQueue[255];
 extern int curCommand;
+
+
+
+struct LoRaregister
+{
+  uint8_t regid;
+  uint8_t value;
+  unsigned long lasttime;
+  bool lastgood=true;
+};
+
+LoRaregister lastReg;
+
 
 uint8_t setRegValue(uint8_t reg, uint8_t value, uint8_t msb, uint8_t lsb)
 {
@@ -92,20 +106,18 @@ void LoRa_init()
   LoRa.idle();
   LoRa.setFrequency(Channel);
   LoRa.setOCP(240);
-  LoRa.setTxPower(20, PA_OUTPUT_PA_BOOST_PIN);
-  LoRa.writeRegister(REG_PA_CONFIG, 0xff);
-  LoRa.setPreambleLength(18);
+  LoRa.setTxPower(20);
+  LoRa.setPreambleLength(16);
   LoRa.setCodingRate4(7);
   LoRa.setSpreadingFactor(12);
-  LoRa.setSignalBandwidth(62.5E3);
+  LoRa.setSignalBandwidth(125E3);
   //LoRa.enableCrc();
   //LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3,RF_RXCONFIG_AGCAUTO_OFF);
-  LoRa.writeRegister(SX127X_REG_DETECT_OPTIMIZE, 0x63);
   writeRegisterBits(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_7_12, SX127X_DETECT_OPTIMIZE_SF_MASK );
   LoRa.writeRegister(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_7_12 );
   LoRa.writeRegister(SX127X_REG_LNA, SX127X_LNA_BOOST_ON|SX127X_LNA_GAIN_1);
   
-  
+  //LoRa.regis
   /*LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_SLEEP);  
   //LoRa.writeRegister(SX127X_REG_OP_MODE, SX127x_OPMODE_LORA); //must be written in sleep mode
   LoRa.writeRegister(SX127X_REG_PAYLOAD_LENGTH, 32);
@@ -225,6 +237,31 @@ void onReceive(int packetSize)
   {
      LoraMessage = incoming;
   }
+  if(incoming[0] == 0x01)
+  {
+      lastReg.regid=(uint8_t)incoming[2];
+      lastReg.value= LoRa.readRegister((uint8_t)incoming[2]);
+      lastReg.lastgood = true;      
+      lastReg.lasttime = millis();
+      
+      if(incoming[1]==0x01)
+      {
+        LoRa.writeRegister((uint8_t)incoming[2],(uint8_t)incoming[3]);
+      }
+      if(incoming[1]==0x02)
+      {
+        LoRa.writeRegister((uint8_t)incoming[2],(uint8_t)incoming[3]);
+      }
+
+      
+  
+  }
+
+  if(lastReg.lasttime<millis()+RegCheckTime)
+  {
+    lastReg.lastgood = false;
+  }
+
 
   //freq correction!!!
   float ferr=0;
