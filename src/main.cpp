@@ -20,6 +20,8 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <HTTPUpdateServer.h>
+#include <LittleFS.h>
+//#include <FS.h>
 
 #ifndef STASSID
 #define STASSID "Binar5SC"
@@ -35,6 +37,7 @@ const char* password = STAPSK;
 
 TaskHandle_t Task1;
 void loop_task(void *pvParameters);
+
 
 
 static const uint16_t screenWidth  = 480;
@@ -274,6 +277,8 @@ SimpleMenu* ShowAllNext(SimpleMenu *menu, char *buf)
 }
 
 
+
+
 void setSprd(int *param)
 {
   int index = * (int *) param;
@@ -411,8 +416,33 @@ void longClick()
 
 
 
+void send_root()
+{
+  File indexfile = LittleFS.open("/index.html",FILE_READ);
+  String content=indexfile.readString();
+  char temps[255];
+  float battery=(float)MyHeater.Battery/10;  
+  if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"BATT=%02f TEMP1=%d TEMP2=%d TEMP3=%d LASTERROR=%d",battery, MyHeater.temp1,MyHeater.temp2,MyHeater.temp3,MyHeater.Error);
+  content.replace("%STATE%",MyHeater.GetStatus());
+  content.replace("%TEMP%", temps);  
+  httpServer.send(200,"text/html",content);
+}
+
+void start_binar()
+{
+  fStart();
+  send_root();
+}
+
+void stop_binar()
+{
+  fStop();
+  send_root();
+}
+
 void setup()
 {
+
   WiFi.softAP(ssid, password);
   WiFi.setTxPower(WIFI_POWER_19_5dBm);
 
@@ -422,7 +452,9 @@ void setup()
   
   pult = EEPROM.read(1);
 
-
+  httpServer.on("/", HTTP_GET, send_root);
+  httpServer.on("/on", HTTP_GET, start_binar);
+  httpServer.on("/off", HTTP_GET, stop_binar);
 
   MyHeater.init();
   
@@ -441,6 +473,13 @@ void setup()
   Serial.print("Hello\r\n");
   mySerial.begin(2400);
   mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
+
+
+  if(!LittleFS.begin(true))
+  {
+  Serial.println("An Error has occurred while mounting LittleFS");
+  return;
+  }
 
   int count=0;
   unsigned long speed=0;
