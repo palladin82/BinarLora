@@ -105,8 +105,8 @@ void LoRa_init()
   LoRa.setSpreadingFactor(12);
   LoRa.setSignalBandwidth(125E3);
 
-  LoRa.writeRegister(REG_PA_CONFIG, 0x80 | (15 & 0xf)); //power by hand +15dBm  80=PA_BOOST 0f=MaxPower
-  LoRa.writeRegister(REG_PA_DAC, LoRa.readRegister(REG_PA_DAC)|0x4);// power amplifier by hand 0x04=default value 0x07=PABOOST
+  LoRa.writeRegister(REG_PA_CONFIG, 0x80 | 0xf); //power by hand +15dBm  80=PA_BOOST 0f=MaxPower
+  LoRa.writeRegister(REG_PA_DAC, 0x87);// power amplifier by hand 0x04=default value 0x07=PABOOST
   LoRa.writeRegister(REG_LNA, (0x20|0x1)); //lna boost by hand
   LoRa.writeRegister(SX1278_REG_MODEM_CONFIG_3,SX1278_AGC_AUTO_ON|SX1278_LOW_DATA_RATE_OPT_ON); //AGC ON and LOW DATARATE ON
   LoRa.idle();
