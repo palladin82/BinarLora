@@ -1,0 +1,50 @@
+  html {
+    font-family: Helvetica;
+    display: inline-block;
+    margin: 0px auto;
+    text-align: center;
+  }
+
+  body {
+    background-color: #000000;
+    background-image: url("img/back.jpg");
+    background-size:     cover;                     
+    background-repeat:   no-repeat;
+    background-position: center center;
+  }
+  h1{
+    color: #4272ca;
+    padding: 2vh;
+  }
+  h2{
+    color: #ca4242;
+    padding: 2vh;
+  }
+  p{
+    font-size: 1.5rem;
+  }
+  .button {
+    display: inline-block;
+    background-color: #008CBA;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    padding: 16px 40px;
+    text-decoration: none;
+    font-size: 30px;
+    margin: 2px;
+    cursor: pointer;
+  }
+  .button2 {
+    display: inline-block;
+    background-color: #f44336;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    padding: 16px 40px;
+    text-decoration: none;
+    font-size: 30px;
+    margin: 2px;
+    cursor: pointer;
+  }
+  

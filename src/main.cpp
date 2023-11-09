@@ -419,10 +419,22 @@ void longClick()
 void send_root()
 {
   File indexfile = LittleFS.open("/index.html",FILE_READ);
-  String content=indexfile.readString();
+  String content;
+
+  if(!indexfile)
+  {
+    /*content = "<!DOCTYPE html><html><head><title>ESP32 Web Server</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"icon\" href=\"data:,\"><link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">
+    </head><body>  <h1>ESP32 Web Server</h1>  <p>Binar state: <strong> %STATE%</strong></p><p>Binar temp: <strong> %TEMP%</strong></p><p><a href=\"/on\"><button class=\"button\">ON</button></a></p>
+    <p><a href=\"/off\"><button class=\"button button2\">OFF</button></a></p></body></html>";*/
+  }
+  else
+  {
+      content=indexfile.readString();
+  }
+ 
   char temps[255];
   float battery=(float)MyHeater.Battery/10;  
-  if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"BATT=%02f TEMP1=%d TEMP2=%d TEMP3=%d LASTERROR=%d",battery, MyHeater.temp1,MyHeater.temp2,MyHeater.temp3,MyHeater.Error);
+  if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"BATT=%02fВ TEMP1=%d°С TEMP2=%d°С TEMP3=%d°С ERROR=%d",battery, MyHeater.temp1,MyHeater.temp2,MyHeater.temp3,MyHeater.Error);
   content.replace("%STATE%",MyHeater.GetStatus());
   content.replace("%TEMP%", temps);  
   httpServer.send(200,"text/html",content);
@@ -440,10 +452,58 @@ void stop_binar()
   send_root();
 }
 
+void send_css()
+{
+  File cssfile = LittleFS.open("/style.css",FILE_READ);
+  String content;
+  if(!cssfile)
+  {
+    return;
+  }
+  else
+  {
+    content=cssfile.readString();
+    httpServer.send(200,"text/css",content);
+  }
+}
+
+void send_back()
+{
+  File imgfile = LittleFS.open("/img/back.jpg",FILE_READ);
+  String content;
+  if(!imgfile)
+  {
+    return;
+  }
+  else
+  {
+    content=imgfile.readString();
+    httpServer.send(200,"image/jpeg",content);
+  }
+
+}
+
+
 void setup()
 {
+  int WiFiTimeOut=0;
+  bool WiFiClient=true;
+  WiFi.begin("***", "***");
 
-  WiFi.softAP(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    if(WiFiTimeOut>15)
+    {
+      WiFi.softAP(ssid, password);
+      WiFiClient=false;
+      break;
+    }
+    delay(1000);
+    Serial.println("Соединяемся к WiFi-сети...");
+    WiFiTimeOut++;
+  }
+
+  
   WiFi.setTxPower(WIFI_POWER_19_5dBm);
 
   EEPROM.begin(256);
@@ -452,9 +512,42 @@ void setup()
   
   pult = EEPROM.read(1);
 
+
   httpServer.on("/", HTTP_GET, send_root);
   httpServer.on("/on", HTTP_GET, start_binar);
   httpServer.on("/off", HTTP_GET, stop_binar);
+  httpServer.on("/style.css", HTTP_GET, send_css);
+  httpServer.on("/img/back.jpg", HTTP_GET, send_back);
+
+  if(!WiFiClient)
+  {
+    IPAddress IP = WiFi.softAPIP();
+    //WiFi.begin(ssid, password);
+      Serial.print("AP IP address: ");
+      Serial.println(IP);
+      //Serial.println("WiFi failed, retrying.");
+    
+    if (MDNS.begin(host)) {
+      Serial.println("mDNS responder started");
+    }
+  }
+  else
+  {
+    IPAddress IP = WiFi.localIP();
+    Serial.print("Local IP address: ");
+    Serial.println(IP);
+    
+    if (MDNS.begin(host)) {
+      Serial.println("mDNS responder started");
+    }
+  }
+ 
+  httpUpdater.setup(&httpServer);
+  httpServer.begin();
+ 
+  MDNS.addService("http", "tcp", 80);
+  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
+
 
   MyHeater.init();
   
@@ -564,22 +657,7 @@ void setup()
                     
   delay(100);
 
-  IPAddress IP = WiFi.softAPIP();
-  //WiFi.begin(ssid, password);
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
-    //Serial.println("WiFi failed, retrying.");
-  MDNS.begin(host);
-  if (MDNS.begin("esp32")) {
-    Serial.println("mDNS responder started");
-  }
- 
- 
-  httpUpdater.setup(&httpServer);
-  httpServer.begin();
- 
-  MDNS.addService("http", "tcp", 80);
-  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
+
 
 // end setup
 }
