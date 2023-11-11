@@ -20,7 +20,7 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <HTTPUpdateServer.h>
-#include <LittleFS.h>
+#include <SPIFFS.h>
 //#include <FS.h>
 
 #ifndef STASSID
@@ -418,7 +418,7 @@ void longClick()
 
 void send_root()
 {
-  File indexfile = LittleFS.open("/index.html",FILE_READ);
+  File indexfile = SPIFFS.open("/index.html",FILE_READ);
   String content;
 
   if(!indexfile)
@@ -454,7 +454,7 @@ void stop_binar()
 
 void send_css()
 {
-  File cssfile = LittleFS.open("/style.css",FILE_READ);
+  File cssfile = SPIFFS.open("/style.css",FILE_READ);
   String content;
   if(!cssfile)
   {
@@ -469,7 +469,7 @@ void send_css()
 
 void send_back()
 {
-  File imgfile = LittleFS.open("/img/back.jpg",FILE_READ);
+  File imgfile = SPIFFS.open("/img/back.jpg",FILE_READ);
   String content;
   if(!imgfile)
   {
@@ -504,7 +504,7 @@ void setup()
   }
 
   
-  WiFi.setTxPower(WIFI_POWER_19_5dBm);
+  WiFi.setTxPower(WIFI_POWER_19dBm);
 
   EEPROM.begin(256);
   
@@ -568,9 +568,9 @@ void setup()
   mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
 
 
-  if(!LittleFS.begin(true))
+  if(!SPIFFS.begin(true))
   {
-  Serial.println("An Error has occurred while mounting LittleFS");
+  Serial.println("An Error has occurred while mounting SPIFFS");
   return;
   }
 
