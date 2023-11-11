@@ -489,12 +489,14 @@ void setup()
   int WiFiTimeOut=0;
   bool WiFiClient=true;
   WiFi.begin("***", "***");
+  WiFi.setHostname("Binar5SHOST");
+  WiFi.setTxPower(WIFI_POWER_19dBm); 
 
   while (WiFi.status() != WL_CONNECTED) 
   {
     if(WiFiTimeOut>15)
     {
-      WiFi.softAP(ssid, password);
+      WiFi.softAP(ssid, password, 3, 0, 4);
       WiFiClient=false;
       break;
     }
@@ -504,8 +506,7 @@ void setup()
   }
 
   
-  WiFi.setTxPower(WIFI_POWER_19dBm);
-
+ 
   EEPROM.begin(256);
   
   debug = EEPROM.read(0);
