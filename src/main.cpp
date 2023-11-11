@@ -434,22 +434,25 @@ void send_root()
  
   char temps[255];
   float battery=(float)MyHeater.Battery/10;  
-  if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"BATT=%02fВ TEMP1=%d°С TEMP2=%d°С TEMP3=%d°С ERROR=%d",battery, MyHeater.temp1,MyHeater.temp2,MyHeater.temp3,MyHeater.Error);
+  if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"BATT = %.2fВ<br>TEMP1 = <b>%d°С</b> <br> TEMP2 = %d°С TEMP3 = %d°С</br>ERROR = %d",battery, MyHeater.temp1,MyHeater.temp2,MyHeater.temp3,MyHeater.Error);
   content.replace("%STATE%",MyHeater.GetStatus());
   content.replace("%TEMP%", temps);  
   httpServer.send(200,"text/html",content);
+  
 }
 
 void start_binar()
 {
   fStart();
-  send_root();
+  httpServer.sendHeader("Location", "/",true);
+  httpServer.send(302, "text/plain", "");
 }
 
 void stop_binar()
 {
   fStop();
-  send_root();
+  httpServer.sendHeader("Location", "/",true);
+  httpServer.send(302, "text/plain", "");
 }
 
 void send_css()
@@ -488,15 +491,26 @@ void setup()
 {
   int WiFiTimeOut=0;
   bool WiFiClient=true;
-  WiFi.begin("***", "***");
-  WiFi.setHostname("Binar5SHOST");
-  WiFi.setTxPower(WIFI_POWER_19dBm); 
+  
+  Serial.begin(115200);                   // initialize serial
+  while (!Serial);
+  Serial.print("Hello\r\n");
+  mySerial.begin(2400);
+  mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
 
+  WiFi.setHostname("Binar5SHOST");
+  //WiFi.setTxPower(WIFI_POWER_19dBm); 
+  WiFi.begin("***", "***");
   while (WiFi.status() != WL_CONNECTED) 
   {
     if(WiFiTimeOut>15)
     {
-      WiFi.softAP(ssid, password, 3, 0, 4);
+      WiFi.disconnect();
+      if (!WiFi.softAP(ssid, password)) 
+      {
+      Serial.println("Soft AP creation failed.");
+      while(1);
+      }
       WiFiClient=false;
       break;
     }
@@ -524,11 +538,12 @@ void setup()
   {
     IPAddress IP = WiFi.softAPIP();
     //WiFi.begin(ssid, password);
-      Serial.print("AP IP address: ");
-      Serial.println(IP);
-      //Serial.println("WiFi failed, retrying.");
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+    //Serial.println("WiFi failed, retrying.");
     
-    if (MDNS.begin(host)) {
+    if (MDNS.begin(host)) 
+    {
       Serial.println("mDNS responder started");
     }
   }
@@ -562,11 +577,7 @@ void setup()
 
   
 
-  Serial.begin(115200);                   // initialize serial
-  while (!Serial);
-  Serial.print("Hello\r\n");
-  mySerial.begin(2400);
-  mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
+  
 
 
   if(!SPIFFS.begin(true))
