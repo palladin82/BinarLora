@@ -20,13 +20,12 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <HTTPUpdateServer.h>
-#include <LittleFS.h>
+#include <SPIFFS.h>
+#include <aes/esp_aes.h>
+#include "wifi_pass.h"
 //#include <FS.h>
 
-#ifndef STASSID
-#define STASSID "Binar5SC"
-#define STAPSK  "12348765"
-#endif
+
  
 WebServer httpServer(80);
 HTTPUpdateServer httpUpdater;
@@ -418,7 +417,7 @@ void longClick()
 
 void send_root()
 {
-  File indexfile = LittleFS.open("/index.html",FILE_READ);
+  File indexfile = SPIFFS.open("/index.html",FILE_READ);
   String content;
 
   if(!indexfile)
@@ -438,6 +437,7 @@ void send_root()
   content.replace("%STATE%",MyHeater.GetStatus());
   content.replace("%TEMP%", temps);  
   httpServer.send(200,"text/html",content);
+  wakeflag++;
 }
 
 void start_binar()
@@ -454,7 +454,7 @@ void stop_binar()
 
 void send_css()
 {
-  File cssfile = LittleFS.open("/style.css",FILE_READ);
+  File cssfile = SPIFFS.open("/style.css",FILE_READ);
   String content;
   if(!cssfile)
   {
@@ -469,7 +469,7 @@ void send_css()
 
 void send_back()
 {
-  File imgfile = LittleFS.open("/img/back.jpg",FILE_READ);
+  File imgfile = SPIFFS.open("/img/back.jpg",FILE_READ);
   String content;
   if(!imgfile)
   {
@@ -488,17 +488,17 @@ void setup()
 {
   int WiFiTimeOut=0;
   bool WiFiClient=true;
-  WiFi.begin("***", "***");
+  WiFi.begin(APSSID, APPSK);
 
   while (WiFi.status() != WL_CONNECTED) 
   {
-    if(WiFiTimeOut>15)
+    if(WiFiTimeOut>10)
     {
       WiFi.softAP(ssid, password);
       WiFiClient=false;
       break;
     }
-    delay(1000);
+    delay(200);
     Serial.println("Соединяемся к WiFi-сети...");
     WiFiTimeOut++;
   }
@@ -568,9 +568,9 @@ void setup()
   mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
 
 
-  if(!LittleFS.begin(true))
+  if(!SPIFFS.begin(true))
   {
-  Serial.println("An Error has occurred while mounting LittleFS");
+  Serial.println("An Error has occurred while mounting SPIFFS");
   return;
   }
 
@@ -776,8 +776,9 @@ void loop()
     }
 
     if(tick > 0 && wakeflag > 0)
-    {
+    {      
         tick=0;
+        wakeflag=0;
     }
     else if(tick > timetosleep)
     {
