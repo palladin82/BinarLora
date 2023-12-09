@@ -23,10 +23,14 @@
 #include <SPIFFS.h>
 #include <aes/esp_aes.h>
 #include "wifi_pass.h"
+#include <ESP32Time.h>
 //#include <FS.h>
 
 
- 
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 60*60*3;
+ESP32Time rtc(10800); //gmt+3
+
 WebServer httpServer(80);
 HTTPUpdateServer httpUpdater;
 
@@ -669,7 +673,11 @@ void setup()
                     
   delay(100);
   WiFi.setTxPower(WIFI_POWER_18_5dBm);
-
+  if(!WiFiClient)
+  {
+    configTime(gmtOffset_sec, 0, ntpServer);
+  }  
+  Serial.println(rtc.getTime("%A, %B %d %Y %H:%M:%S"));
 
 // end setup
 }
@@ -836,22 +844,46 @@ void sendWelcome()
 void sendStatus()
 {
   
-    char status[4];
+    char status[10];
     status[0]=0xaa;
+    unsigned long curtime = rtc.getLocalEpoch();
+    
+    unsigned long vIn = 0;
+    //char vOut [11];
+    //_ultoa_s(vIn,vOut,sizeof(vOut),10);
+
+
     if(MyHeater.sync)
     {
       status[1]=MyHeater.Battery;
       status[2]=MyHeater.temp1;
       status[3]=MyHeater.Status;
+      status[4]=curtime         & 0xFF;
+      status[5]=(curtime >>  8) & 0xFF;
+      status[6]=(curtime >> 16) & 0xFF;
+      status[7]=(curtime >> 24) & 0xFF;
+
+      
     }
     else
     {
       status[1]=random(-127,127);
       status[2]=random(-127,127);
       status[3]=MyHeater.Status;
-    }    
+      status[4]=curtime         & 0xFF;
+      status[5]=(curtime >>  8) & 0xFF;
+      status[6]=(curtime >> 16) & 0xFF;
+      status[7]=(curtime >> 24) & 0xFF;
+
+    }
+      //status[4]=12;
+      //status[5]=22;
+      //status[6]=24;
+      //status[7]=1;
+    Serial.printf("%02x %02x %02x %02x \r\n",status[4],status[5],status[6],status[7]);
     sendMessage(status);
-  
+    //delay(100);
+    //sendMessage(time);  
 }
 
 S_PACKET ReadMySerial()

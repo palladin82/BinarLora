@@ -17,7 +17,7 @@
 #define REG_PA_CONFIG            0x09
 #define REG_PA_DAC               0x4d
 #define REG_LNA                  0x0c
-#define Channel                  8693E5
+#define Channel                  9093E5
 #define bandwidth                125E3
 #define RegCheckTime             15000
 
@@ -100,11 +100,12 @@ void LoRa_init()
   RxChainCalibration();
   LoRa.begin(currChannel);
   LoRa.setOCP(240);
-  LoRa.setPreambleLength(16);
+  LoRa.setPreambleLength(8);
   LoRa.setCodingRate4(7);
   LoRa.setSpreadingFactor(12);
   LoRa.setSignalBandwidth(125E3);
-
+  //LoRa.set
+  //LoRa.writeRegister(REG_PAYLOADLENGTH, 0x32 );
   LoRa.writeRegister(REG_PA_CONFIG, 0x80 | 0xf); //power by hand +15dBm  80=PA_BOOST 0f=MaxPower
   LoRa.writeRegister(REG_PA_DAC, 0x87);// power amplifier by hand 0x04=default value 0x07=PABOOST
   LoRa.writeRegister(REG_LNA, (0x20|0x1)); //lna boost by hand
@@ -121,6 +122,7 @@ void sendMessage(String outgoing) {
   LoRa.write(localAddress);             // add sender address
   LoRa.write(msgCount);                 // add message ID
   LoRa.write(outgoing.length());        // add payload length
+  Serial.println(outgoing.length());
   LoRa.print(outgoing);                 // add payload
   LoRa.endPacket();                     // finish packet and send it
   //delay(200);

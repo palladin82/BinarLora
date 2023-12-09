@@ -74,7 +74,7 @@ uint8_t serialize(char *buf, struct S_PACKET *t);
 class Heater
 {
   public:    
-    uint8_t Status=0;
+    uint8_t Status=1;
     uint8_t Battery=1;
     uint8_t VentPower;
     uint8_t TimeAS;
@@ -157,12 +157,12 @@ class Heater
           static char msg[9];
           switch(Status)
           {
-            case 0: sprintf(msg,"Off");return msg; break;
-            case 1: sprintf(msg,"Starting");return msg; break;
-            case 2: sprintf(msg,"Warm");return msg; break;
-            case 3: sprintf(msg,"Heat");return msg; break;
-            case 4: sprintf(msg,"Purge");return msg; break;
-            case 5: sprintf(msg,"Shut");return msg; break;            
+            case 1: sprintf(msg,"Off");return msg; break;
+            case 2: sprintf(msg,"Starting");return msg; break;
+            case 3: sprintf(msg,"Warm");return msg; break;
+            case 4: sprintf(msg,"Heat");return msg; break;
+            case 5: sprintf(msg,"Purge");return msg; break;
+            case 6: sprintf(msg,"Shut");return msg; break;            
             default: sprintf(msg,"E-%d",Status);return msg; break;
           }
           return msg;
@@ -243,7 +243,7 @@ class Heater
                                             Also, this value seems to appear twice, god knows, why.
                                     - `gc`: Glow current (0-9A) during startup
                     */
-                      Status=data.payload[0x00];
+                      Status=data.payload[0x00]+1;
                       Error=data.payload[0x02];
                       Battery=data.payload[0x06];                      
                       TimeAS=data.payload[0x09];
