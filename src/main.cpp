@@ -498,7 +498,8 @@ void setup()
   mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
 
   WiFi.setHostname("Binar5SHOST");
-  //WiFi.setTxPower(WIFI_POWER_19dBm); 
+  //WiFi.setTxPower(WIFI_POWER_19dBm);
+   
   WiFi.begin(APSSID, APPSK);
   while (WiFi.status() != WL_CONNECTED) 
   {
