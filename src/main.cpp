@@ -25,15 +25,12 @@
 #include "wifi_pass.h"
 #include <ESP32Time.h>
 #include <esp_sntp.h>
-//#include <FS.h>
 
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 60*60*3;
 ESP32Time rtc(10800); //gmt+3
 
-//WiFiUDP ntpUDP;
-//NTPClient timeClient(ntpUDP);
 
 WebServer httpServer(80);
 HTTPUpdateServer httpUpdater;
@@ -76,8 +73,6 @@ static unsigned long lastRefreshTime = 0;
 OneButton button(PIN_INPUT, true);
 
 
-//HardwareSerial mySerial(34, -1); // RX, TX (Serial1)
-//HardwareSerial mySerialTX(-1, 23, true); //need to be inverted (Serial2 inverted)
 HardwareSerial mySerial(1);
 HardwareSerial mySerialTX(2);
 
@@ -108,17 +103,8 @@ line 360-360 and 368-369 set tx/rx as u see
 int lastState = HIGH; // the previous state from the input pin
 int currentState;
 uint8_t debug=0;
-
-
-
-//Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
-
-
-
-
-
-
 int valueA = 1, valueB = 2, mainValue = 55;
+bool sntp_time_set=false;
 
 void fStart();
 void fStop();
@@ -131,34 +117,27 @@ void sendWelcome();
 void ToggleDebug();
 void setSprd(int *param);
 void setbaud(long unsigned baud);
+void sntp_notification(timeval*);
 
 SimpleMenu* ShowAllNext(SimpleMenu *menu, char *buf);
 
 S_PACKET ReadMySerial();
 
-//void displayMsg(String);
-//void sendHEX(char outgoing);
 
-//String intToString(int num);
-//void init_oled();
-
-
-//uint8_t setRegValue(uint8_t reg, uint8_t value, uint8_t msb, uint8_t lsb);
 
 void setbaud(long unsigned baud)
 {
-
-  //mySerial.end();
-  //mySerialTX.end();
   mySerial.updateBaudRate(baud);
-  //begin(*baud);
   mySerialTX.updateBaudRate(baud);
-  
 }
 
 
+void sntp_notification(timeval *timecb)
+{
+    sntp_time_set=true;
+}
 
-int zero=0, one=1, four=4, five=5;
+
 int menuMaxShow=3;
 
 SimpleMenu MenuSubSprd[] = {
@@ -529,7 +508,7 @@ void setup()
       break;
     }
     delay(200);
-    Serial.println("Соединяемся к WiFi-сети...");
+    Serial.println("Соединяемся c WiFi-сетью...");
     WiFiTimeOut++;
   }
 
@@ -551,10 +530,8 @@ void setup()
   if(!WiFiClient)
   {
     IPAddress IP = WiFi.softAPIP();
-    //WiFi.begin(ssid, password);
     Serial.print("AP IP address: ");
     Serial.println(IP);
-    //Serial.println("WiFi failed, retrying.");
     
     if (MDNS.begin(host)) 
     {
@@ -687,6 +664,7 @@ void setup()
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0,"pool.ntp.org");
   sntp_setservername(1,"time.nist.gov");
+  sntp_set_time_sync_notification_cb(sntp_notification);
   sntp_init();
   Serial.println(rtc.getTime("%A, %B %d %Y %H:%M:%S"));
 
@@ -860,9 +838,7 @@ void sendStatus()
     unsigned long curtime = rtc.getLocalEpoch();
     
     unsigned long vIn = 0;
-    //char vOut [11];
-    //_ultoa_s(vIn,vOut,sizeof(vOut),10);
-
+    
 
     if(MyHeater.sync)
     {
@@ -873,7 +849,7 @@ void sendStatus()
       status[5]=(curtime >>  8) & 0xFF;
       status[6]=(curtime >> 16) & 0xFF;
       status[7]=(curtime >> 24) & 0xFF;
-
+      status[8]=sntp_time_set;
       
     }
     else
@@ -885,16 +861,11 @@ void sendStatus()
       status[5]=(curtime >>  8) & 0xFF;
       status[6]=(curtime >> 16) & 0xFF;
       status[7]=(curtime >> 24) & 0xFF;
-
+      status[8]=sntp_time_set;
+      
     }
-      //status[4]=12;
-      //status[5]=22;
-      //status[6]=24;
-      //status[7]=1;
-    Serial.printf("%02x %02x %02x %02x \r\n",status[4],status[5],status[6],status[7]);
     sendMessage(status);
-    //delay(100);
-    //sendMessage(time);  
+      
 }
 
 S_PACKET ReadMySerial()

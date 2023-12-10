@@ -16,7 +16,6 @@
 #define RADIO_BUSY_PIN              32
 #define REG_PA_CONFIG            0x09
 #define REG_PA_DAC               0x4d
-#define REG_LNA                  0x0c
 #define Channel                  9093E5
 #define bandwidth                125E3
 #define RegCheckTime             15000
