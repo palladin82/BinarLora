@@ -25,11 +25,13 @@
 #include "wifi_pass.h"
 #include <ESP32Time.h>
 #include <esp_sntp.h>
-
+#include <TimeLib.h>
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 60*60*3;
 ESP32Time rtc(10800); //gmt+3
+
+RTC_DATA_ATTR unsigned long startTimers[2];
 
 
 WebServer httpServer(80);
@@ -118,6 +120,9 @@ void ToggleDebug();
 void setSprd(int *param);
 void setbaud(long unsigned baud);
 void sntp_notification(timeval*);
+void print_wakeup_reason();
+void check_timers();
+void set_timer1();
 
 SimpleMenu* ShowAllNext(SimpleMenu *menu, char *buf);
 
@@ -194,6 +199,7 @@ void goto_deepsleep()
       esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
       
       LoRa.receive();
+      esp_sleep_enable_timer_wakeup(60*1000*1000);
       esp_deep_sleep_start();
 
 
@@ -401,6 +407,63 @@ void longClick()
 }
 
 
+void set_timer1()
+{
+  String hour = httpServer.arg(String("hour"));
+  String min = httpServer.arg(String("min"));
+  
+  struct tm t;
+  t.tm_hour = atoi(hour.c_str());
+  t.tm_min = atoi(min.c_str());
+  startTimers[0] = mktime(&t);
+  
+  Serial.printf("%02d %02d \r\n",t.tm_hour,t.tm_min);
+  Serial.println(startTimers[0]);
+  httpServer.sendHeader("Location", "/timers.html",true);
+  httpServer.send(302, "text/plain", "");
+}
+
+void send_timers()
+{
+  File indexfile = SPIFFS.open("/timers.html",FILE_READ);
+  String content;
+
+  if(!indexfile)
+  {
+    /*content = "<!DOCTYPE html><html><head><title>ESP32 Web Server</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"icon\" href=\"data:,\"><link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">
+    </head><body>  <h1>ESP32 Web Server</h1>  <p>Binar state: <strong> %STATE%</strong></p><p>Binar temp: <strong> %TEMP%</strong></p><p><a href=\"/on\"><button class=\"button\">ON</button></a></p>
+    <p><a href=\"/off\"><button class=\"button button2\">OFF</button></a></p></body></html>";*/
+  }
+  else
+  {
+      content=indexfile.readString();
+  }
+ 
+  char temps[255];
+  char batt[10];
+  char chour[2];
+  char cmin[2];
+  //struct tm t;
+  
+  //t.tm_hour = ;
+  //t.tm_min = ;
+
+  sprintf(chour,"%02d",hour(startTimers[0]));
+  sprintf(cmin,"%02d",minute(startTimers[0]));
+
+  float battery=(float)MyHeater.Battery/10;  
+  sprintf(batt,"%.2fВ",battery);
+  sprintf(temps,"<b>%d°С</b><br>ERROR %d",MyHeater.temp1, MyHeater.Error);
+  content.replace("%STATE%",MyHeater.GetStatus());
+  content.replace("%TEMP%", temps);
+  content.replace("%BATT%", batt);
+  content.replace("%TIME%",rtc.getTime("%A, %B %d %Y %H:%M:%S"));
+  content.replace("%HH%",chour);
+  content.replace("%MM%",cmin);
+  httpServer.send(200,"text/html",content);
+  
+  tick=0;
+}
 
 void send_root()
 {
@@ -430,7 +493,7 @@ void send_root()
   content.replace("%BATT%", batt);
   content.replace("%TIME%",rtc.getTime("%A, %B %d %Y %H:%M:%S"));
   httpServer.send(200,"text/html",content);
-  wakeflag++;
+  tick=0;
 }
 
 void start_binar()
@@ -484,77 +547,28 @@ void setup()
   int WiFiTimeOut=0;
   bool WiFiClient=true;
   
+
   Serial.begin(115200);                   // initialize serial
   while (!Serial);
   Serial.print("Hello\r\n");
   mySerial.begin(2400);
   mySerialTX.begin(2400,SERIAL_8N1,-1,-1,true,20000UL,112);
 
-  WiFi.setHostname("Binar5SHOST");
+  print_wakeup_reason();
+
+  
   
 
-  WiFi.begin(APSSID, APPSK);
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-    if(WiFiTimeOut>10)
-    {
-      WiFi.disconnect();
-      if (!WiFi.softAP(ssid, password)) 
-      {
-      Serial.println("Soft AP creation failed.");
-      while(1);
-      }
-      WiFiClient=false;
-      break;
-    }
-    delay(200);
-    Serial.println("Соединяемся c WiFi-сетью...");
-    WiFiTimeOut++;
-  }
+
 
   
  
   EEPROM.begin(256);
   
-  debug = EEPROM.read(0);
-  
+  debug = EEPROM.read(0);  
   pult = EEPROM.read(1);
 
-
-  httpServer.on("/", HTTP_GET, send_root);
-  httpServer.on("/on", HTTP_GET, start_binar);
-  httpServer.on("/off", HTTP_GET, stop_binar);
-  httpServer.on("/style.css", HTTP_GET, send_css);
-  httpServer.on("/img/back.jpg", HTTP_GET, send_back);
-
-  if(!WiFiClient)
-  {
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
-    
-    if (MDNS.begin(host)) 
-    {
-      Serial.println("mDNS responder started");
-    }
-  }
-  else
-  {
-    IPAddress IP = WiFi.localIP();
-    Serial.print("Local IP address: ");
-    Serial.println(IP);
-    
-    if (MDNS.begin(host)) {
-      Serial.println("mDNS responder started");
-    }
-  }
- 
-  httpUpdater.setup(&httpServer);
-  httpServer.begin();
- 
-  MDNS.addService("http", "tcp", 80);
-  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
-
+  
 
   MyHeater.init();
   
@@ -649,15 +663,66 @@ void setup()
 
   mySerial.setTimeout(1000);
   
- // xTaskCreatePinnedToCore(
- //                   loop_task,   /* Task function. */
- //                   "Task1",     /* name of task. */
- //                   10000,       /* Stack size of task */
- //                   NULL,        /* parameter of the task */
- //                   1,           /* priority of the task */
- //                   &Task1,      /* Task handle to keep track of created task */
- //                   0);          /* pin task to core 1 */  
-                    
+  
+
+  //init WiFi and set RTC
+
+  WiFi.setHostname("Binar5SHOST");
+  WiFi.begin(APSSID, APPSK);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    if(WiFiTimeOut>10)
+    {
+      WiFi.disconnect();
+      if (!WiFi.softAP(ssid, password)) 
+      {
+      Serial.println("Soft AP creation failed.");
+      while(1);
+      }
+      WiFiClient=false;
+      break;
+    }
+    delay(200);
+    Serial.println("Соединяемся c WiFi-сетью...");
+    WiFiTimeOut++;
+  }
+
+  httpServer.on("/", HTTP_GET, send_root);
+  httpServer.on("/timers.html", HTTP_GET, send_timers);
+  httpServer.on("/set1", HTTP_GET, set_timer1);
+  httpServer.on("/on", HTTP_GET, start_binar);
+  httpServer.on("/off", HTTP_GET, stop_binar);
+  httpServer.on("/style.css", HTTP_GET, send_css);
+  httpServer.on("/img/back.jpg", HTTP_GET, send_back);
+
+  if(!WiFiClient)
+  {
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+    
+    if (MDNS.begin(host)) 
+    {
+      Serial.println("mDNS responder started");
+    }
+  }
+  else
+  {
+    IPAddress IP = WiFi.localIP();
+    Serial.print("Local IP address: ");
+    Serial.println(IP);
+    
+    if (MDNS.begin(host)) {
+      Serial.println("mDNS responder started");
+    }
+  }
+ 
+  httpUpdater.setup(&httpServer);
+  httpServer.begin();
+ 
+  MDNS.addService("http", "tcp", 80);
+  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
+
   delay(100);
   WiFi.setTxPower(WIFI_POWER_18_5dBm);
   setenv("TZ","MSK-3",1);
@@ -964,6 +1029,40 @@ S_PACKET ReadMySerial()
 }
 
 
+void print_wakeup_reason()
+{
+  esp_sleep_wakeup_cause_t wakeup_reason;
+
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch(wakeup_reason)
+  {
+    case ESP_SLEEP_WAKEUP_EXT0 : Serial.print("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer");
+                                  //check timers
+                                  check_timers();
+                                  break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
+}
 
 
+void check_timers()
+{
+  //unsigned long curtime = rtc.getLocalEpoch();
+  
+    
+  unsigned long epoch;
+  struct tm t;
+  t.tm_hour = rtc.getHour(true);
+  t.tm_min = rtc.getMinute();
+  epoch = mktime(&t);
 
+  if(epoch!=startTimers[0])goto_deepsleep();
+
+  //do someting and go to deepsleep again! 
+  
+}

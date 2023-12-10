@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Binar 5S</title>
+  <title>Binar 5S timers</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" type="text/css" href="style.css">
-  <script type="text/javascript">function timedRefresh(timeoutPeriod) {
-    setTimeout("location.reload(true);",timeoutPeriod);
-}</script>
-</head>
-<body onload="JavaScript:timedRefresh(5000);">
+  </head>
+<body>
   <h1>Binar 5S</h1>
   <h2>Binar state: <strong> %STATE%</strong></h2>
-  <h2><strong> %TEMP%</strong></h2>
-  <h2>%TIME%</h2>
+  <h2><strong> %TEMP%</strong></h2>  
   <h2>%BATT%</h2>
+    <form action="/set1" method="GET">
+        <p class="h2">
+            <input type="text" name="hour" id="hour" value="%HH%" size="2"/> : <input type="text" name="min" id="min" value="%MM%" size="2"/>
+            <input type="submit" value="SET">
+        </p>
+    </form>
   <p><a href="/on"><button class="button">&nbsp;ON&nbsp;</button></a> <a href="/off"><button class="button2">OFF</button></a></p>
-  <br><br><a href="/timers.html">Set timers</a>
   <br><br><br><br><a href="/update">update</a>
 </body>
 </html>
