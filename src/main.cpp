@@ -24,12 +24,16 @@
 #include <aes/esp_aes.h>
 #include "wifi_pass.h"
 #include <ESP32Time.h>
+#include <esp_sntp.h>
 //#include <FS.h>
 
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 60*60*3;
 ESP32Time rtc(10800); //gmt+3
+
+//WiFiUDP ntpUDP;
+//NTPClient timeClient(ntpUDP);
 
 WebServer httpServer(80);
 HTTPUpdateServer httpUpdater;
@@ -436,10 +440,16 @@ void send_root()
   }
  
   char temps[255];
+  char batt[10];
+  //char time[64];
+  //time = rtc.
   float battery=(float)MyHeater.Battery/10;  
-  if(MyHeater.temp1>0||MyHeater.temp2||MyHeater.temp3) sprintf(temps,"BATT = %.2fВ<br>TEMP1 = <b>%d°С</b> <br> TEMP2 = %d°С TEMP3 = %d°С</br>ERROR = %d",battery, MyHeater.temp1,MyHeater.temp2,MyHeater.temp3,MyHeater.Error);
+  sprintf(batt,"%.2fВ",battery);
+  sprintf(temps,"<b>%d°С</b><br>ERROR %d",MyHeater.temp1, MyHeater.Error);
   content.replace("%STATE%",MyHeater.GetStatus());
-  content.replace("%TEMP%", temps);  
+  content.replace("%TEMP%", temps);
+  content.replace("%BATT%", batt);
+  content.replace("%TIME%",rtc.getTime("%A, %B %d %Y %H:%M:%S"));
   httpServer.send(200,"text/html",content);
   wakeflag++;
 }
@@ -673,10 +683,11 @@ void setup()
                     
   delay(100);
   WiFi.setTxPower(WIFI_POWER_18_5dBm);
-  if(!WiFiClient)
-  {
-    configTime(gmtOffset_sec, 0, ntpServer);
-  }  
+  setenv("TZ","MSK-3",1);
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  sntp_setservername(0,"pool.ntp.org");
+  sntp_setservername(1,"time.nist.gov");
+  sntp_init();
   Serial.println(rtc.getTime("%A, %B %d %Y %H:%M:%S"));
 
 // end setup
