@@ -274,33 +274,35 @@ void fGetstatus()
 
 void fStart()
 {
-
-
-    char buf[255];
-    serialize(buf,&MyHeater.start);
-    mySerialTX.write(buf, MyHeater.start.len+7);
-    if(MyHeater.sync==false)sendHEX(0xF8);    
-    displayMsg("Request START");
-    
-    sendStatus();
-    if(debug)
-    {
-      Serial.println("Request START");
-    }
+  char buf[255];
+  char message[32];
+  serialize(buf,&MyHeater.start);
+  mySerialTX.write(buf, MyHeater.start.len+7);
+  if(MyHeater.sync==false)sendHEX(0xF8);    
+  sprintf(message,"Request START");
+  displayMsg(message);
+  
+  sendStatus();
+  if(debug)
+  {
+    Serial.println(message);
+  }
 }
 
 void fStop()
 {
     char buf[255];
+    char message[32];
     serialize(buf,&MyHeater.shutdown);
     mySerialTX.write(buf, MyHeater.shutdown.len+7);
-    if(MyHeater.sync==false)sendHEX(0xFC);    
-    displayMsg("Request STOP");
+    if(MyHeater.sync==false)sendHEX(0xFC);
+    sprintf(message,"Request STOP");
+    displayMsg(message);
 
     sendStatus();
     if(debug)
     {
-      Serial.println("Request STOP");
+      Serial.println(message);
     }
 
   
@@ -740,6 +742,34 @@ S_PACKET ReadMySerial()
                 mySerial.readBytes(reading,2);
                 temp.crc = (reading[0] << 8 ) | reading[1];
               }              
+          }
+          else
+          {
+              mySerial.readBytes(reading,1);
+              temp.len = reading[0];
+
+              if(debug)
+              {
+                Serial.write(reading[0]);
+              }
+
+              mySerial.readBytes(reading,2);
+              temp.msg_id1 = reading[0];                
+              temp.msg_id2 = reading[1];
+
+              if(debug)
+              {
+                Serial.write(reading[0]);
+                Serial.write(reading[1]);
+              }
+
+              if(temp.len>0)
+              {
+                mySerial.readBytes(temp.payload,temp.len);
+                mySerial.readBytes(reading,2);
+                temp.crc = (reading[0] << 8 ) | reading[1];
+              }
+
           }                  
       }
   }

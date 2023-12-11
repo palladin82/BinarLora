@@ -3,6 +3,8 @@
 #include <LoRa.h>
 
 extern ESP32Time rtc;
+extern int commandQueue[255];
+extern int curCommand;
 
 typedef struct timerstruct
 {
@@ -53,6 +55,8 @@ void check_timers()
   if(t.tm_hour==waketimer[0].hh&&t.tm_min==waketimer[0].mm)
   {
     //start binar
+    curCommand++;
+    commandQueue[curCommand]=1;
   }
   else
   {
@@ -75,7 +79,7 @@ void goto_deepsleep()
     t.tm_hour = waketimer[0].mm;
     nextwake = mktime(&t);
     currepoch = rtc.getLocalEpoch();
-    
+
     waketime = (unsigned long) abs((long)(nextwake - currepoch));
     
     WiFi.mode(WIFI_OFF);

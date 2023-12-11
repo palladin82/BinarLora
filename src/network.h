@@ -9,7 +9,7 @@
 
 WebServer httpServer(80);
 HTTPUpdateServer httpUpdater;
-extern RTC_DATA_ATTR unsigned long startTimers[2];
+//extern RTC_DATA_ATTR unsigned long startTimers[2];
 extern RTC_DATA_ATTR wTIMER waketimer[2];
 extern int tick;
 extern Heater MyHeater;
