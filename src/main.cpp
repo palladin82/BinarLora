@@ -19,8 +19,9 @@
 #include "planar.h"
 #include "display.h"
 #include "LoRaDriver.h"
-#include "network.h"
 #include "deepsleep.h"
+#include "network.h"
+
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 60*60*3;
@@ -731,7 +732,6 @@ S_PACKET ReadMySerial()
               {
                 Serial.write(reading[0]);
                 Serial.write(reading[1]);
-              
               }
 
               if(temp.len>0)

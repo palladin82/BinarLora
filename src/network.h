@@ -10,6 +10,7 @@
 WebServer httpServer(80);
 HTTPUpdateServer httpUpdater;
 extern RTC_DATA_ATTR unsigned long startTimers[2];
+extern RTC_DATA_ATTR wTIMER waketimer[2];
 extern int tick;
 extern Heater MyHeater;
 extern ESP32Time rtc;
@@ -30,13 +31,12 @@ void set_timer1()
   String hour = httpServer.arg(String("hour"));
   String min = httpServer.arg(String("min"));
   
-  struct tm t;
-  t.tm_hour = atoi(hour.c_str());
-  t.tm_min = atoi(min.c_str());
-  startTimers[0] = mktime(&t);
+
+  waketimer[0].hh = atoi(hour.c_str());
+  waketimer[0].mm = atoi(min.c_str());
   
-  Serial.printf("%02d %02d \r\n",t.tm_hour,t.tm_min);
-  Serial.println(startTimers[0]);
+  Serial.printf("%02d %02d \r\n",waketimer[0].hh,waketimer[0].mm);
+
   httpServer.sendHeader("Location", "/timers.html",true);
   httpServer.send(302, "text/plain", "");
 }
@@ -66,8 +66,8 @@ void send_timers()
   //t.tm_hour = ;
   //t.tm_min = ;
 
-  sprintf(chour,"%02d",hour(startTimers[0]));
-  sprintf(cmin,"%02d",minute(startTimers[0]));
+  sprintf(chour,"%02d",hour(waketimer[0].hh));
+  sprintf(cmin,"%02d",minute(waketimer[0].mm));
 
   float battery=(float)MyHeater.Battery/10;  
   sprintf(batt,"%.2fВ",battery);
